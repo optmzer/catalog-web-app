@@ -44,6 +44,6 @@ For the versions available, see the tags on this repository.
 ## Authors
 
 Alexander Frolov - front-end as well as back-end
-css and bootstrap is from here 
-[Start Bootstrap](https://startbootstrap.com/template-overviews/)
-[bootstrap](https://getbootstrap.com/)
+css and bootstrap is from here:
+- [Start Bootstrap](https://startbootstrap.com/template-overviews/)
+- [Bootstrap](https://getbootstrap.com/)
