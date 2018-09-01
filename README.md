@@ -15,7 +15,23 @@ Google, Facebook and LinkedIn
 ## Folder Structure
 
 After cloning the app should looks like this:
-- the content coming up soon
+```
+catalog/
+    static/
+        custom/ - Custom css
+        vendor/
+            bootstrap/ - Standard bootstrap libraries
+                css/
+                js/ 
+            jquery/ - JQuery 3.2.1
+    templates/
+        catalogitem.html
+        deletecatalogitem.html
+        editcatalogitem.html
+        index.html
+        login.html
+    README.md
+```
 
 ## Contributing
 
@@ -27,7 +43,7 @@ For the versions available, see the tags on this repository.
 
 ## Authors
 
-    Alexander Frolov - front-end as well as back-end
-    css and bootstrap is from here 
-    css - [Start Bootstrap - Blog Home](https://startbootstrap.com/template-overviews/blog-home)
-    [bootstrap](https://getbootstrap.com/)
+Alexander Frolov - front-end as well as back-end
+css and bootstrap is from here 
+[Start Bootstrap](https://startbootstrap.com/template-overviews/)
+[bootstrap](https://getbootstrap.com/)
