@@ -1,40 +1,80 @@
-from flask import Flask, render_template, request, redirect,jsonify, url_for, flash
-from sqlalchemy import create_engine, asc
+#!/usr/bin/env python3
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+
+# Imports DB
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant, MenuItem, User
 
-# Authentication imports
-from flask import session as login_session
-import random, string
+##### TODO Create DB classes and populate catalog
+from database_setup import Base, User, UserItem
 
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.client import FlowExchangeError
-import httplib2
-import json
-from flask import make_response
-import requests
+################ Create Flask app ################
 
 app = Flask(__name__)
 
-CLIEN_ID = json.loads(
-    open('client_secrets.json', 'r').read()
-)['web']['client_id']
+################ Create Connection to DB ################
+# init connection with DB
+engine = create_engine('sqlite:///thecatalog.db?check_same_thread=False')
 
-APPLICATION_NAME = "Restaurant Menu Web App" ###### I need to obtain new ID and rename the app
-
-#Connect to Database and create database session
-engine = create_engine('sqlite:///restaurantmenuwithusers.db')
+# Connection between class def and corresp table in DB
 Base.metadata.bind = engine
-
+# Create delete and other commands Alchemy does via an interface called a Session
 DBSession = sessionmaker(bind=engine)
+
 session = DBSession()
 
-@app.route('/login')
-def showLogin():
-    """Create a state token to prevent request
-    Store it in the session for later validation"""
-    state = ''.join(random.choice(
-        string.ascii_uppercase + string.digits) for x in range(32))
-    login_session['state'] = state
-    # Sent state to STATE property in html page
-    return render_template('login.html', STATE=state)
+################ Getters/Setters ################
+
+def getRestaurant(restaurantID):
+    restaurant = session.query(Restaurant).filter_by(id = restaurantID).one()
+    print("L28 restaurant = " + restaurant.name + " ##########")
+    return restaurant
+
+def getMenuItems(restaurantID):
+    return session.query(MenuItem).filter_by(restaurant_id = restaurantID).all()
+
+def getMenuItem(restaurantID, menuItemID):
+    restaurant = getRestaurant(restaurantID)
+    menuItem = session.query(MenuItem).filter_by(restaurant_id = restaurant.id, id = menuItemID).one()
+    print("L33 MenuItem " + menuItem.name)
+    return menuItem
+
+################ Routs ################
+################ Restaurant ################
+
+# Show all restaurants
+@app.route('/')
+@app.route('/restaurant/')
+def showRestaurants():
+    restaurants = session.query(Restaurant).all()
+    return render_template('restaurants.html', restaurants = restaurants)
+
+# Create new restaurant
+@app.route('/restaurant/new/', methods=['GET', 'POST'])
+def newRestaurant():
+    if request.method == 'POST':
+        if request.form['name']:
+            restaurant = Restaurant(name = request.form['name'], )
+            session.add(restaurant)
+            session.commit()
+            flash("Restaurant: " + restaurant.name + " added.")
+            return redirect(url_for('showRestaurants'))
+    else:
+        return render_template('newrestaurant.html')
+
+# Edit restaurant
+@app.route('/restaurant/<int:restaurantID>/edit/', methods=['GET', 'POST'])
+def editRestaurant(restaurantID):
+    # TODO: Add redirect when successful
+    restaurant = getRestaurant(restaurantID)
+    if request.method == 'POST':
+        if request.form['name']:
+            restaurant.name = request.form['name']
+            message = "New Restaurant name is " + request.form['name']
+            session.add(restaurant)
+            session.commit()
+            flash(message)
+            ## Redirect
+            return redirect(url_for('showRestaurants'))
+    else:
+        return render_template('editrestaurant.html', restaurant = restaurant)
