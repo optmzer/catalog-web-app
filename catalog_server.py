@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 ##### TODO Create DB classes and populate catalog
-from database_setup import Base, User, UserItem
+from catalog_db_setup import Base, User, UserItem
 
 ################ Create Flask app ################
 
@@ -25,32 +25,32 @@ session = DBSession()
 
 ################ Getters/Setters ################
 
-def getRestaurant(restaurantID):
-    restaurant = session.query(Restaurant).filter_by(id = restaurantID).one()
-    print("L28 restaurant = " + restaurant.name + " ##########")
-    return restaurant
+# def getCatalogEntry(catalogEntryID):
+#     restaurant = session.query(Restaurant).filter_by(id = restaurantID).one()
+#     print("L28 restaurant = " + restaurant.name + " ##########")
+#     return restaurant
 
-def getMenuItems(restaurantID):
-    return session.query(MenuItem).filter_by(restaurant_id = restaurantID).all()
+# def getMenuItems(restaurantID):
+#     return session.query(MenuItem).filter_by(restaurant_id = restaurantID).all()
 
-def getMenuItem(restaurantID, menuItemID):
-    restaurant = getRestaurant(restaurantID)
-    menuItem = session.query(MenuItem).filter_by(restaurant_id = restaurant.id, id = menuItemID).one()
-    print("L33 MenuItem " + menuItem.name)
-    return menuItem
+# def getMenuItem(restaurantID, menuItemID):
+#     restaurant = getCatalogEntry(catalogEntryID)
+#     menuItem = session.query(MenuItem).filter_by(restaurant_id = restaurant.id, id = menuItemID).one()
+#     print("L33 MenuItem " + menuItem.name)
+#     return menuItem
 
 ################ Routs ################
 ################ Restaurant ################
 
 # Show all restaurants
 @app.route('/')
-@app.route('/restaurant/')
-def showRestaurants():
-    restaurants = session.query(Restaurant).all()
-    return render_template('restaurants.html', restaurants = restaurants)
+@app.route('/thecatalog/')
+def showCatalog():
+    catalog = session.query(CatalogItem).all()
+    return render_template('index.html', catalog = catalog)
 
 # Create new restaurant
-@app.route('/restaurant/new/', methods=['GET', 'POST'])
+@app.route('/thecatalog/new-catalog-entry/', methods=['GET', 'POST'])
 def newRestaurant():
     if request.method == 'POST':
         if request.form['name']:
@@ -58,23 +58,23 @@ def newRestaurant():
             session.add(restaurant)
             session.commit()
             flash("Restaurant: " + restaurant.name + " added.")
-            return redirect(url_for('showRestaurants'))
+            return redirect(url_for('showCatalog'))
     else:
         return render_template('newrestaurant.html')
 
-# Edit restaurant
-@app.route('/restaurant/<int:restaurantID>/edit/', methods=['GET', 'POST'])
+# Edit catalog item
+@app.route('/thecatalog/<int:catalogID>/edit/', methods=['GET', 'POST'])
 def editRestaurant(restaurantID):
     # TODO: Add redirect when successful
-    restaurant = getRestaurant(restaurantID)
+    restaurant = getCatalogEntry(catalogEntryID)
     if request.method == 'POST':
         if request.form['name']:
             restaurant.name = request.form['name']
-            message = "New Restaurant name is " + request.form['name']
+            message = "New Catalog entry is " + request.form['name']
             session.add(restaurant)
             session.commit()
             flash(message)
             ## Redirect
-            return redirect(url_for('showRestaurants'))
+            return redirect(url_for('showCatalog'))
     else:
-        return render_template('editrestaurant.html', restaurant = restaurant)
+        return render_template('editcatalogentry.html', catalogEntry = catalogEntry)
