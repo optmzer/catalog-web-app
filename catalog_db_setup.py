@@ -12,12 +12,14 @@ Base = declarative_base()
 ########
 class CatalogItem(Base):
 
-    __tablename__ = 'catalog_item'
+    __tablename__ = 'catalogItem'
 
     # Mapper
+    catalogItemId = Column(Integer, primary_key = True)
     title = Column(String(80), nullable = False)
-    id = Column(Integer, primary_key = True)
-
+    # userId is a foreign key
+    userId = Column(Integer, ForeignKey('user.userId'))
+    userId = relationship(User)
 
 ########
 class User(Base):
@@ -25,10 +27,10 @@ class User(Base):
     __tablename__ = 'user'
 
     # Mapper
-    id = Column(Integer, primary_key=True)
+    userId = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
-    user_picture = Column(String(250))
+    userPicture = Column(String(250))
 
 
 ########
@@ -37,25 +39,25 @@ class UserItem(Base):
     __tablename__ = 'user_item'
 
     # Mapper
-    id = Column(Integer, primary_key = True)
+    userItemId = Column(Integer, primary_key = True)
     title = Column(String(80), nullable = False)
     description = Column(String(250))
-    item_picture = Column(String(250))
+    itemPicture = Column(String(250))
 
-    # catalog_item_id is a foreign key
-    catalog_item_id = Column(Integer, ForeignKey('catalog_item.id'))
-    catalog_item_id = relationship(CatalogItem)
-    # user_id is a foreign key
-    user_id = Column(Integer, ForeignKey('user.id'))
-    user_id = relationship(User)
+    # catalogItemId is a foreign key
+    catalogItemId = Column(Integer, ForeignKey('catalogItem.id'))
+    catalogItemId = relationship(CatalogItem)
+    # userId is a foreign key
+    userId = Column(Integer, ForeignKey('user.userId'))
+    userId = relationship(User)
 
     @property
     def serialize(self):
         return {
             'title': self.title,
             'description': self.description,
-            'id': self.id,
-            'item_picture': self.item_picture
+            'userItemId': self.userItemId,
+            'itemPicture': self.itemPicture
         }
 
 
