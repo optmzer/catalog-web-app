@@ -2,3 +2,4 @@ __pycache__/
 templates/login.html
 client_secrets.json
 *.db
+img/

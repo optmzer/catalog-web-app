@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 ##### TODO Create DB classes and populate catalog
-from catalog_db_setup import Base, User, UserItem
+from catalog_db_setup import Base, User, UserItem, CatalogItem
 
 ################ Create Flask app ################
 
@@ -78,3 +78,11 @@ def editRestaurant(restaurantID):
             return redirect(url_for('showCatalog'))
     else:
         return render_template('editcatalogentry.html', catalogEntry = catalogEntry)
+
+if __name__ == '__main__':
+    # app.debug = True - Means the server will reload itself
+    # each time it sees chaneg in code.
+    app.secret_key = 'appSecretKey'
+    app.debug = True
+    # param specifies on port 5000
+    app.run(host = '0.0.0.0', port = 5000) 
