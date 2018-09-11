@@ -1,5 +1,13 @@
 __pycache__/
-templates/login.html
+
+# API keys
 client_secrets.json
+
+# local database
 *.db
+
+# static images
 img/
+
+# Misc
+*.pyc

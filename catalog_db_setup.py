@@ -12,11 +12,9 @@ Base = declarative_base()
 
 ########
 class User(Base):
-
     __tablename__ = 'user'
-
     # Mapper
-    userId = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
     avatar = Column(String(250))
@@ -24,15 +22,13 @@ class User(Base):
 
 ########
 class CatalogItem(Base):
-
-    __tablename__ = 'catalogItem'
-
+    __tablename__ = 'catalog_item'
     # Mapper
-    catalogItemId = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key = True)
     title = Column(String(80), nullable = False)
-    # userId is a foreign key
-    userId = Column(Integer, ForeignKey('user.userId'))
-    userId = relationship(User)
+    # user_id is a foreign key
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
@@ -40,23 +36,21 @@ class CatalogItem(Base):
             'title': self.title
         }
 
+
 ########
 class UserItem(Base):
-
     __tablename__ = 'user_item'
-
     # Mapper
-    userItemId = Column(Integer, primary_key = True)
+    user_item_id = Column(Integer, primary_key = True)
     title = Column(String(80), nullable = False)
     description = Column(String(250))
-    itemPicture = Column(String(250))
-
-    # catalogItemId is a foreign key
-    catalogItemId = Column(Integer, ForeignKey('catalogItem.id'))
-    catalogItemId = relationship(CatalogItem)
-    # userId is a foreign key
-    userId = Column(Integer, ForeignKey('user.userId'))
-    userId = relationship(User)
+    item_picture = Column(String(250))
+    # catalog_item_id is a foreign key
+    catalog_item_id = Column(Integer, ForeignKey('catalog_item.id'))
+    catalog_item = relationship(CatalogItem)
+    # user_id is a foreign key
+    user_id = Column(Integer, ForeignKey('user.id'))
+    user = relationship(User)
 
     @property
     def serialize(self):
@@ -64,8 +58,8 @@ class UserItem(Base):
         return {
             'title': self.title,
             'description': self.description,
-            'userItemId': self.userItemId,
-            'itemPicture': self.itemPicture
+            'user_item_id': self.user_item_id,
+            'item_picture': self.item_picture
         }
 
 
