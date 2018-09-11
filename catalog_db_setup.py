@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
-from sqlalchemy import Column, ForeignKey, Integer, String 
+import datetime
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -15,6 +16,7 @@ class User(Base):
     __tablename__ = 'user'
     # Mapper
     id = Column(Integer, primary_key=True)
+    created_date = Column(DateTime, default=datetime.datetime.utcnow)
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
     avatar = Column(String(250))
@@ -26,6 +28,7 @@ class CatalogItem(Base):
     # Mapper
     id = Column(Integer, primary_key = True)
     title = Column(String(80), nullable = False)
+    created_date = Column(DateTime, default=datetime.datetime.utcnow)
     # user_id is a foreign key
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
@@ -42,6 +45,7 @@ class UserItem(Base):
     __tablename__ = 'user_item'
     # Mapper
     user_item_id = Column(Integer, primary_key = True)
+    created_date = Column(DateTime, default=datetime.datetime.utcnow)
     title = Column(String(80), nullable = False)
     description = Column(String(250))
     item_picture = Column(String(250))
