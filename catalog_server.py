@@ -84,6 +84,21 @@ def editCatalogItem(catalogItemId):
     else:
         return render_template('editcatalogitem.html', catalogItem = catalogItem)
 
+
+# Delete CatalogItem
+@app.route('/thecatalog/<int:catalogItemId>/delete/', methods=['GET', 'POST'])
+def deleteCatalogItem(catalogItemId):
+    catalogItem = getCatalogItem(catalogItemId)
+    if request.method == 'POST':
+        session.delete(catalogItem)
+        session.commit()
+        flash("CatalogItem " + catalogItem.title + " was deleted")
+        ## Redirect
+        return redirect(url_for('showCatalog'))
+    else:
+        return render_template('deletecatalogitem.html', catalogItem = catalogItem)
+
+
 if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself
     # each time it sees chaneg in code.
