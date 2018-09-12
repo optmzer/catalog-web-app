@@ -43,19 +43,20 @@ def getUserItem(catalogItemId, userItemId):
     print("L33 userItem " + userItem.title)
     return userItem
 
-################ Routs ################
-################ Restaurant ################
+########## Routs ################
+########## CatalogItem ##########
 
 # Show all restaurants
 @app.route('/')
 @app.route('/thecatalog/')
 def showCatalog():
+    """Shows fromt page of the catalog"""
     catalog = session.query(CatalogItem).all()
     return render_template('index.html', catalog = catalog)
 
 # Create new catalogItem
 # TODO assign user id from the form
-@app.route('/thecatalog/new-catalog-item/', methods=['GET', 'POST'])
+@app.route('/thecatalog/catalogitem/new/', methods=['GET', 'POST'])
 def newCatalogItem():
     if request.method == 'POST':
         if request.form['name']:
@@ -97,6 +98,22 @@ def deleteCatalogItem(catalogItemId):
         return redirect(url_for('showCatalog'))
     else:
         return render_template('deletecatalogitem.html', catalogItem = catalogItem)
+
+
+# Show UserItems in CatalogItem
+@app.route('/thecatalog/<int:catalogItemId>/items/', methods=['GET', 'POST'])
+def showUserItemsInCatalog(catalogItemId):
+    """Shows list of UserItems in this category(CatalogItem)"""
+    catalogItem = getCatalogItem(catalogItemId)
+    userItems = getUserItems(catalogItemId)
+    print("############### Show UserItems in CatalogItem  ###############")
+    print("CatalogItem = %s" % catalogItem.title)
+    return render_template("catalogitem.html", catalogItem=catalogItem, userItems=userItems)
+
+
+########## Routs ################
+########## UserItem #############
+
 
 
 if __name__ == '__main__':
