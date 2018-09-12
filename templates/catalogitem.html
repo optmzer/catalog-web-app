@@ -21,7 +21,7 @@
 
     <!-- Navigation -->
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-        <a class="navbar-brand" href="#">Navbar</a>
+        <a class="navbar-brand" href="#">The Catalog</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -63,15 +63,15 @@
           <!-- Title -->
           <h1 class="mt-4">Title: {{catalogItem.title}}</h1>
           <!-- Avatar -->
-          <img class="avatar d-inline" src="../img/img_avatar.png" alt="Avatar"> 
+          <img class="avatar d-inline" src={{user.avatar}} alt="Avatar"> 
           <!-- Author -->
           <p class="lead d-inline">
             by
-            <a href="#">{{user.name}}</a>
+            <a href="#">{{user.name}}</a> <p>email: {{user.email}}</p>
           </p>
           <hr>
           <!-- Date/Time -->
-          <p>Posted on {{catalogItem.date}}</p>
+          <p>Posted on {{catalogItem.created_date}}</p>
           <hr>
           <!-- Preview Image -->
           <img class="img-fluid rounded" src="http://placehold.it/900x300" alt="">

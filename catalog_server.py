@@ -25,19 +25,23 @@ session = DBSession()
 
 ################ Getters/Setters ################
 
-# def getCatalogEntry(catalogEntryID):
-#     restaurant = session.query(Restaurant).filter_by(id = restaurantID).one()
-#     print("L28 restaurant = " + restaurant.name + " ##########")
-#     return restaurant
+def getCatalogItem(catalogItemId):
+    """Returns a CatalogItem by its Id"""
+    catalogItem = session.query(CatalogItem).filter_by(id = catalogItemId).one()
+    print("L28 CatalogItem = " + catalogItem.title + " ##########")
+    return catalogItem
 
-# def getMenuItems(restaurantID):
-#     return session.query(MenuItem).filter_by(restaurant_id = restaurantID).all()
+def getUserItems(catalogItemId):
+    """Returns all UserItems for that CatalogItem by CatalogItem.id"""
+    return session.query(UserItem).filter_by(catalog_item_id = catalogItemId).all()
 
-# def getMenuItem(restaurantID, menuItemID):
-#     restaurant = getCatalogEntry(catalogEntryID)
-#     menuItem = session.query(MenuItem).filter_by(restaurant_id = restaurant.id, id = menuItemID).one()
-#     print("L33 MenuItem " + menuItem.name)
-#     return menuItem
+def getUserItem(catalogItemId, userItemId):
+    """Returns UserItem for a particular User Id and for a particular 
+    CatalogItem Id"""
+    catalogItem = getCatalogItem(catalogItemId)
+    userItem = session.query(UserItem).filter_by(catalog_item_id = catalogItem.id, id = userItemId).one()
+    print("L33 userItem " + userItem.title)
+    return userItem
 
 ################ Routs ################
 ################ Restaurant ################
@@ -49,35 +53,36 @@ def showCatalog():
     catalog = session.query(CatalogItem).all()
     return render_template('index.html', catalog = catalog)
 
-# Create new restaurant
-@app.route('/thecatalog/new-catalog-entry/', methods=['GET', 'POST'])
-def newRestaurant():
+# Create new catalogItem
+# TODO assign user id from the form
+@app.route('/thecatalog/new-catalog-item/', methods=['GET', 'POST'])
+def newCatalogItem():
     if request.method == 'POST':
         if request.form['name']:
-            restaurant = Restaurant(name = request.form['name'], )
-            session.add(restaurant)
+            catalogItem = CatalogItem(title = request.form['name'], userId = 1)
+            session.add(catalogItem)
             session.commit()
-            flash("Restaurant: " + restaurant.name + " added.")
+            flash("CatalogItem: " + catalogItem.title + " added.")
             return redirect(url_for('showCatalog'))
     else:
-        return render_template('newrestaurant.html')
+        return render_template('newcatalogitem.html')
 
 # Edit catalog item
-@app.route('/thecatalog/<int:catalogID>/edit/', methods=['GET', 'POST'])
-def editRestaurant(restaurantID):
+@app.route('/thecatalog/<int:catalogItemId>/edit/', methods=['GET', 'POST'])
+def editCatalogItem(catalogItemId):
     # TODO: Add redirect when successful
-    restaurant = getCatalogEntry(catalogEntryID)
+    catalogItem = getCatalogItem(catalogItemId)
     if request.method == 'POST':
         if request.form['name']:
-            restaurant.name = request.form['name']
+            catalogItem.title = request.form['name']
             message = "New Catalog entry is " + request.form['name']
-            session.add(restaurant)
+            session.add(catalogItem)
             session.commit()
             flash(message)
             ## Redirect
             return redirect(url_for('showCatalog'))
     else:
-        return render_template('editcatalogentry.html', catalogEntry = catalogEntry)
+        return render_template('editcatalogitem.html', catalogItem = catalogItem)
 
 if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself
