@@ -43,6 +43,12 @@ def getUserItem(catalogItemId, userItemId):
     print("L33 userItem " + userItem.title)
     return userItem
 
+def getUser(userId):
+    """Returns a User by the Id"""
+    user = session.query(User).filter_by(id = userId).one()
+    print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
+    return user
+
 ########## Routs ################
 ########## CatalogItem ##########
 
@@ -100,6 +106,10 @@ def deleteCatalogItem(catalogItemId):
         return render_template('deletecatalogitem.html', catalogItem = catalogItem)
 
 
+########## Routs ################
+########## UserItem #############
+
+
 # Show UserItems in CatalogItem
 @app.route('/thecatalog/<int:catalogItemId>/items/', methods=['GET', 'POST'])
 def showUserItemsInCatalog(catalogItemId):
@@ -111,9 +121,16 @@ def showUserItemsInCatalog(catalogItemId):
     return render_template("catalogitem.html", catalogItem=catalogItem, userItems=userItems)
 
 
-########## Routs ################
-########## UserItem #############
-
+# Show a UserItem
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/')
+def showUserItem(catalogItemId, userItemId):
+    """Displays UserItem from Catalog"""
+    catalogItem = getCatalogItem(catalogItemId)
+    userItem = getUserItem(catalogItemId, userItemId)
+    user = getUser(userItem.user_id)
+    print("############### Show UserItem  ###############")
+    print("CatalogItem = %s" % catalogItem.title)
+    return render_template("useritem.html", catalogItem=catalogItem, userItem=userItem, user=user)
 
 
 if __name__ == '__main__':

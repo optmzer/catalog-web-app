@@ -44,7 +44,7 @@ class CatalogItem(Base):
 class UserItem(Base):
     __tablename__ = 'user_item'
     # Mapper
-    user_item_id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key = True)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     title = Column(String(80), nullable = False)
     description = Column(String(250))
@@ -62,7 +62,7 @@ class UserItem(Base):
         return {
             'title': self.title,
             'description': self.description,
-            'user_item_id': self.user_item_id,
+            'id': self.id,
             'item_picture': self.item_picture
         }
 

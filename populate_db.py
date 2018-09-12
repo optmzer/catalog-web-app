@@ -20,12 +20,12 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # User 1
-user01 = User(name = "User01 Mock", email = "user01@email.com", avatar = "../img/img_avatar.png")
+user01 = User(name = "User01 Mock", email = "user01@email.com", avatar = "/static/img/img_avatar.png")
 session.add(user01)
 session.commit()
 
 # User 2
-user02 = User(name = "User02 Mock", email = "user02@email.com", avatar = "../img/avatar6.png")
+user02 = User(name = "User02 Mock", email = "user02@email.com", avatar = "/static/img/avatar6.png")
 session.add(user02)
 session.commit()
 
