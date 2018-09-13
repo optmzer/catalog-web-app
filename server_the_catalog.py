@@ -80,9 +80,9 @@ def editCatalogItem(catalogItemId):
     # TODO: Add redirect when successful
     catalogItem = getCatalogItem(catalogItemId)
     if request.method == 'POST':
-        if request.form['name']:
-            catalogItem.title = request.form['name']
-            message = "New Catalog entry is " + request.form['name']
+        if request.form['title']:
+            catalogItem.title = request.form['title']
+            message = "New Catalog entry is " + request.form['title']
             session.add(catalogItem)
             session.commit()
             flash(message)
@@ -131,6 +131,64 @@ def showUserItem(catalogItemId, userItemId):
     print("############### Show UserItem  ###############")
     print("CatalogItem = %s" % catalogItem.title)
     return render_template("useritem.html", catalogItem=catalogItem, userItem=userItem, user=user)
+
+
+# Create new UserItem
+@app.route('/thecatalog/useritem/new/', methods=['GET', 'POST'])
+def createNewUserItem():
+    if request.method == 'POST':
+        if request.form['title']:
+            _title = request.form['title']
+            _description = request.form['description']
+            _itemPic = request.form['itemPicture']
+            _userId = 1
+            _catalogItemId = 1
+            userItem = UserItem(title = _title, description= _description, item_picture=_itemPic, user_id = _userId, catalog_item_id = _catalogItemId)
+            session.add(userItem)
+            session.commit()
+            flash("CatalogItem: " + userItem.title + " added.")
+            return redirect(url_for('showUserItemsInCatalog'))
+    else:
+        return render_template('newuseritem.html')
+
+
+# Edit a UserItem
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/edit/', methods=['GET', 'POST'])
+def editUserItem(catalogItemId, userItemId):
+    _catalogItem = getCatalogItem(catalogItemId)
+    _userItem = getUserItem(catalogItemId, userItemId)
+    _user = getUser(_userItem.user_id)
+    if request.method == 'POST':
+        if request.form['title']:
+            _title = request.form['title']
+            _description = request.form['description']
+            _itemPic = request.form['itemPicture']
+            _userId = 1
+            _catalogItemId = 1
+            userItem = UserItem(title = _title, description= _description, item_picture=_itemPic, user_id = _userId, catalog_item_id = _catalogItemId)
+            session.add(userItem)
+            session.commit()
+            flash("CatalogItem: " + userItem.title + " added.")
+            return redirect(url_for('showUserItemsInCatalog'))
+    else:
+        return render_template('edituseritem.html', catalogItem = _catalogItem, userItem = _userItem, user = _user )
+
+
+# Delete a UserItem
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/delete/', methods=['GET', 'POST'])
+def deleteUserItem(catalogItemId, userItemId):
+    catalogItem = getCatalogItem(catalogItemId)
+    userItem = getUserItem(catalogItemId, userItemId)
+    user = getUser(userItem.user_id)
+    if request.method == 'POST':
+        session.delete(userItem)
+        session.commit()
+        flash("CatalogItem " + userItem.title + " was deleted")
+        ## Redirect
+        return redirect(url_for('showUserItemsInCatalog'))
+    else:
+        return render_template('deleteuseritem.html', catalogItem = catalogItem, userItem=userItem, user=user)
+
 
 
 if __name__ == '__main__':
