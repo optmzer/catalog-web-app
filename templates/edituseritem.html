@@ -44,7 +44,7 @@
                 </ul>
                 <form class="form-inline my-2 my-lg-0">
                 <input class="form-control mr-sm-2" placeholder="Search" aria-label="Search" type="text">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Log in</button>
                 </form>
             </div>
         </nav>
@@ -65,7 +65,7 @@
                 <div>
                     <p>Title: {{userItem.title}}</p>
                     <p>Created on: {{userItem.created_date}}</p>
-                    <p>Created by: {{user.avatar}} {{user.name}}, {{user.email}}</p>
+                    <p>Created by: <img class="avatar d-inline" src="{{user.avatar}}" alt="avatar"/> {{user.name}}, {{user.email}}</p>
                     <p>from "{{catalogItem.title}}"</p>
                 </div>
             </div>
