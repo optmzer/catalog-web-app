@@ -6,10 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>The Catalog</title>
     <!-- Bootstrap core CSS -->
-    <link href="../static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Custom styles for this template -->
-    <link href="../static/custom/starter-template.css" rel="stylesheet">
+    <link href="/static/custom/starter-template.css" rel="stylesheet">
 </head>
 
 <body>
@@ -22,7 +22,7 @@
                 <div class="collapse navbar-collapse" id="navbarsExampleDefault">
                   <ul class="navbar-nav mr-auto">
                     <li class="nav-item active">
-                      <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                      <a class="nav-link" href="{{url_for('showCatalog')}}">Home <span class="sr-only">(current)</span></a>
                     </li>
                     <li class="nav-item">
                       <a class="nav-link" href="#">Link</a>
@@ -46,8 +46,8 @@
                 </div>
               </nav>
     <div>
-        <h1>Create Catalog Item</h1>
-        <h2>{{catalogItem.title}}</h2>
+        <h1>Title: {{catalogItem.title}}</h1>
+        <h2>Created on: {{catalogItem.created_date}}</h2>
         <h3>TODO:</h3>
         <p>
             This is going to be a list of Categories(CatalogItems)

@@ -52,7 +52,7 @@ def getUser(userId):
 ########## Routs ################
 ########## CatalogItem ##########
 
-# Show all restaurants
+# Show all catalog entry
 @app.route('/')
 @app.route('/thecatalog/')
 def showCatalog():
@@ -65,8 +65,8 @@ def showCatalog():
 @app.route('/thecatalog/catalogitem/new/', methods=['GET', 'POST'])
 def newCatalogItem():
     if request.method == 'POST':
-        if request.form['name']:
-            catalogItem = CatalogItem(title = request.form['name'], userId = 1)
+        if request.form['catalogItemTitle']:
+            catalogItem = CatalogItem(title = request.form['catalogItemTitle'], user_id = 1)
             session.add(catalogItem)
             session.commit()
             flash("CatalogItem: " + catalogItem.title + " added.")
@@ -80,9 +80,9 @@ def editCatalogItem(catalogItemId):
     # TODO: Add redirect when successful
     catalogItem = getCatalogItem(catalogItemId)
     if request.method == 'POST':
-        if request.form['title']:
-            catalogItem.title = request.form['title']
-            message = "New Catalog entry is " + request.form['title']
+        if request.form['catalogItemTitle']:
+            catalogItem.title = request.form['catalogItemTitle']
+            message = "New Catalog entry is " + request.form['catalogItemTitle']
             session.add(catalogItem)
             session.commit()
             flash(message)
@@ -95,15 +95,18 @@ def editCatalogItem(catalogItemId):
 # Delete CatalogItem
 @app.route('/thecatalog/<int:catalogItemId>/delete/', methods=['GET', 'POST'])
 def deleteCatalogItem(catalogItemId):
-    catalogItem = getCatalogItem(catalogItemId)
-    if request.method == 'POST':
-        session.delete(catalogItem)
-        session.commit()
-        flash("CatalogItem " + catalogItem.title + " was deleted")
-        ## Redirect
-        return redirect(url_for('showCatalog'))
-    else:
-        return render_template('deletecatalogitem.html', catalogItem = catalogItem)
+    try:
+        catalogItem = getCatalogItem(catalogItemId)
+        if request.method == 'POST':
+            session.delete(catalogItem)
+            session.commit()
+            flash("CatalogItem " + catalogItem.title + " was deleted")
+            ## Redirect
+            return redirect(url_for('showCatalog'))
+        else:
+            return render_template('deletecatalogitem.html', catalogItem = catalogItem)
+    except :
+        return redirect(url_for('pageNotFound'))
 
 
 ########## Routs ################
@@ -189,6 +192,11 @@ def deleteUserItem(catalogItemId, userItemId):
     else:
         return render_template('deleteuseritem.html', catalogItem = catalogItem, userItem=userItem, user=user)
 
+
+
+@app.route('/thecatalog/pagenotfound/', methods=['GET'])
+def pageNotFound():
+    return render_template('pagenotfound.html')
 
 
 if __name__ == '__main__':
