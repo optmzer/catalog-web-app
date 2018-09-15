@@ -56,7 +56,24 @@
             <div>
                 <p>TODO: Create new form</p>
                 <p>For CatalogItem. drop list</p>
-                <p>Title: </p>
+            </div>
+            <!-- Comments Form -->
+          <div class="card my-4">
+            <h5 class="card-header">Fill in post details:</h5>
+                <div class="card-body">
+                  <form action="" method="POST">
+                      <div class="form-group">
+                          <label for="userItemTitle">Post Title*</label>
+                          <input class="form-control" type="text" name="userItemTitle" placeholder="User Item Title" required="true">
+                          <label for="description">Description*</label>
+                          <textarea class="form-control" name="description" id="description" rows="4" cols="30" required="true"></textarea>
+                          <label for="itemPicture">Image source</label>
+                          <input class="form-control" type="text" name="itemPicture" id="itemPicture">
+                          <br>
+                          <input class="btn btn-primary" type="submit" value="SUBMIT">
+                        </div>
+                    </form>
+                </div>
             </div>
         </main>
         

@@ -25,10 +25,13 @@ session = DBSession()
 
 ################ Getters/Setters ################
 
+def getCatalogItemsAll():
+    return session.query(CatalogItem).all()
+
 def getCatalogItem(catalogItemId):
     """Returns a CatalogItem by its Id"""
     catalogItem = session.query(CatalogItem).filter_by(id = catalogItemId).one()
-    print("L28 CatalogItem = " + catalogItem.title + " ##########")
+    # print("L28 CatalogItem = " + catalogItem.title + " ##########")
     return catalogItem
 
 def getUserItems(catalogItemId):
@@ -40,13 +43,13 @@ def getUserItem(catalogItemId, userItemId):
     CatalogItem Id"""
     catalogItem = getCatalogItem(catalogItemId)
     userItem = session.query(UserItem).filter_by(catalog_item_id = catalogItem.id, id = userItemId).one()
-    print("L33 userItem " + userItem.title)
+    # print("L33 userItem " + userItem.title)
     return userItem
 
 def getUser(userId):
     """Returns a User by the Id"""
     user = session.query(User).filter_by(id = userId).one()
-    print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
+    # print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
     return user
 
 ########## Routs ################
@@ -57,8 +60,7 @@ def getUser(userId):
 @app.route('/thecatalog/')
 def showCatalog():
     """Shows fromt page of the catalog"""
-    catalog = session.query(CatalogItem).all()
-    return render_template('index.html', catalog = catalog)
+    return render_template('index.html', catalog = getCatalogItemsAll())
 
 # Create new catalogItem
 # TODO assign user id from the form
@@ -109,39 +111,36 @@ def deleteCatalogItem(catalogItemId):
         return redirect(url_for('pageNotFound'))
 
 
-########## Routs ################
-########## UserItem #############
-
-
 # Show UserItems in CatalogItem
 @app.route('/thecatalog/<int:catalogItemId>/items/', methods=['GET', 'POST'])
 def showUserItemsInCatalog(catalogItemId):
     """Shows list of UserItems in this category(CatalogItem)"""
     catalogItem = getCatalogItem(catalogItemId)
     userItems = getUserItems(catalogItemId)
-    print("############### Show UserItems in CatalogItem  ###############")
-    print("CatalogItem = %s" % catalogItem.title)
     return render_template("catalogitem.html", catalogItem=catalogItem, userItems=userItems)
+
+
+########## Routs ################
+########## UserItem #############
 
 
 # Show a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/')
 def showUserItem(catalogItemId, userItemId):
     """Displays UserItem from Catalog"""
+    catalog = getCatalogItemsAll()
     catalogItem = getCatalogItem(catalogItemId)
     userItem = getUserItem(catalogItemId, userItemId)
     user = getUser(userItem.user_id)
-    print("############### Show UserItem  ###############")
-    print("CatalogItem = %s" % catalogItem.title)
-    return render_template("useritem.html", catalogItem=catalogItem, userItem=userItem, user=user)
+    return render_template("useritem.html", catalog=catalog, catalogItem=catalogItem, userItem=userItem, user=user)
 
 
 # Create new UserItem
 @app.route('/thecatalog/useritem/new/', methods=['GET', 'POST'])
 def createNewUserItem():
     if request.method == 'POST':
-        if request.form['title']:
-            _title = request.form['title']
+        if request.form['userItemTitle']:
+            _title = request.form['userItemTitle']
             _description = request.form['description']
             _itemPic = request.form['itemPicture']
             _userId = 1
@@ -150,7 +149,7 @@ def createNewUserItem():
             session.add(userItem)
             session.commit()
             flash("CatalogItem: " + userItem.title + " added.")
-            return redirect(url_for('showUserItemsInCatalog'))
+            return redirect(url_for('showUserItemsInCatalog', catalogItemId=1))
     else:
         return render_template('newuseritem.html')
 
