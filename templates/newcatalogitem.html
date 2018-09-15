@@ -47,11 +47,25 @@
     <header>
         <h2>Create New Catalog Item</h2>
     </header>
-    <main>
-        <form action="" method="POST">
-            Name: <input type="text" name="catalogItemTitle" placeholder="Catalog Item Title" required="true">
-            <input type="submit" value="SUBMIT">
-        </form>
+    <main role="main" class="container">
+      <div class="row">
+        <div class="col-sm-6" style="margin: auto;">
+          <!-- New User Item Form -->
+          <div class="card my-2">
+            <h5 class="card-header">Fill in group details:</h5>
+            <div class="card-body">
+              <form action="" method="POST">
+                  <div class="form-group">
+                    <label for="catalogItemTitle">Group Title</label>
+                    <input class="form-control" type="text" name="catalogItemTitle" placeholder="Catalog Item Title" required="true">
+                    <hr>
+                    <input class="btn btn-primary" type="submit" value="SUBMIT">
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
     <footer>
 
