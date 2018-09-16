@@ -53,17 +53,21 @@
         <main role="main" class="container">
     
             <h3>Create New User Item</h3>
-            <div>
-                <p>TODO: Create new form</p>
-                <p>For CatalogItem. drop list</p>
-            </div>
 
             <!-- New User Item Form -->
+            <!--catalog item id is a drop down menu-->
             <div class="card my-4">
                 <h5 class="card-header">Fill in post details:</h5>
                 <div class="card-body">
                     <form action="" method="POST">
                         <div class="form-group">
+                            <label for="catalogItem">Category*</label>
+                            <select class="form-control" name="catalogItemId" id="catalogItemId" required="true">
+                                <option value="" selected="true">Select Category</option>
+                                {% for item in catalog %}
+                                <option value="{{item.id}}">{{item.title}}</option>
+                                {% endfor %}
+                            </select>
                             <label for="userItemTitle">Post Title*</label>
                             <input class="form-control" type="text" name="userItemTitle" placeholder="User Item Title" required="true">
                             <label for="description">Description*</label>

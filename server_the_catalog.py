@@ -130,31 +130,42 @@ def showUserItemsInCatalog(catalogItemId):
 # Show a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/')
 def showUserItem(catalogItemId, userItemId):
-    """Displays UserItem from Catalog"""
-    catalog = getCatalogItemsAll()
-    catalogItem = getCatalogItem(catalogItemId)
-    userItem = getUserItem(catalogItemId, userItemId)
-    user = getUser(userItem.user_id)
-    return render_template("useritem.html", catalog=catalog, catalogItem=catalogItem, userItem=userItem, user=user)
+    """
+    Displays UserItems from CatalogItem
+    If nothing found returns 404 page
+    """
+    try:
+        catalog = getCatalogItemsAll()
+        catalogItem = getCatalogItem(catalogItemId)
+        userItem = getUserItem(catalogItemId, userItemId)
+        user = getUser(userItem.user_id)
+        return render_template("useritem.html", catalog=catalog, catalogItem=catalogItem, userItem=userItem, user=user)
+    except:
+        return redirect(url_for('pageNotFound'))
 
 
 # Create new UserItem
 @app.route('/thecatalog/useritem/new/', methods=['GET', 'POST'])
 def createNewUserItem():
+    """
+    Creates new UserItem
+    TODO make list of categories in the catalog to choose from
+    """
+    catalog = getCatalogItemsAll()
     if request.method == 'POST':
         if request.form['userItemTitle']:
             _title = request.form['userItemTitle']
             _description = request.form['description']
             _itemPic = request.form['itemPicture']
             _userId = 1
-            _catalogItemId = 1
+            _catalogItemId = request.form['catalogItemId']
             userItem = UserItem(title = _title, description= _description, item_picture=_itemPic, user_id = _userId, catalog_item_id = _catalogItemId)
             session.add(userItem)
             session.commit()
             flash("CatalogItem: " + userItem.title + " added.")
-            return redirect(url_for('showUserItemsInCatalog', catalogItemId=1))
+            return redirect(url_for('showUserItemsInCatalog', catalogItemId=_catalogItemId))
     else:
-        return render_template('newuseritem.html')
+        return render_template('newuseritem.html', catalog=catalog)
 
 
 # Edit a UserItem
@@ -182,18 +193,20 @@ def editUserItem(catalogItemId, userItemId):
 # Delete a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/delete/', methods=['GET', 'POST'])
 def deleteUserItem(catalogItemId, userItemId):
-    catalogItem = getCatalogItem(catalogItemId)
-    userItem = getUserItem(catalogItemId, userItemId)
-    user = getUser(userItem.user_id)
-    if request.method == 'POST':
-        session.delete(userItem)
-        session.commit()
-        flash("CatalogItem " + userItem.title + " was deleted")
-        ## Redirect
-        return redirect(url_for('showUserItemsInCatalog'))
-    else:
-        return render_template('deleteuseritem.html', catalogItem = catalogItem, userItem=userItem, user=user)
-
+    try:
+        catalogItem = getCatalogItem(catalogItemId)
+        userItem = getUserItem(catalogItemId, userItemId)
+        user = getUser(userItem.user_id)
+        if request.method == 'POST':
+            session.delete(userItem)
+            session.commit()
+            flash("CatalogItem " + userItem.title + " was deleted")
+            ## Redirect
+            return redirect(url_for('showUserItemsInCatalog'))
+        else:
+            return render_template('deleteuseritem.html', catalogItem = catalogItem, userItem=userItem, user=user)
+    except :
+        return redirect(url_for('pageNotFound'))
 
 
 @app.route('/thecatalog/pagenotfound/', methods=['GET'])
