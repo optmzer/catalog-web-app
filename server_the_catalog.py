@@ -100,6 +100,9 @@ def deleteCatalogItem(catalogItemId):
     try:
         catalogItem = getCatalogItem(catalogItemId)
         if request.method == 'POST':
+            if request.form['reset']:
+                return redirect(url_for('showUserItemsInCatalog', catalogItemId=catalogItemId))
+
             session.delete(catalogItem)
             session.commit()
             flash("CatalogItem " + catalogItem.title + " was deleted")
