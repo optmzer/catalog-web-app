@@ -48,28 +48,51 @@
                 </form>
             </div>
         </nav>
-    
-          <!-- Page Content -->
+        <!-- Page Content -->
         <main role="main" class="container">
-    
+            
             <h3>Edit User Item</h3>
-            <div>
-                <p>TODO:</p>
-                <ul>
-                    <li>Create edit form</li>
-                    <li>Able to reassign UserItem to new CatalogItem</li>
-                    <li>Able to rename UserItem</li>
-                    <li>Able to modify description</li>
-                    <li>Able to modify picture link</li>
-                </ul>
                 <div>
-                    <p>Title: {{userItem.title}}</p>
-                    <p>Created on: {{userItem.created_date}}</p>
-                    <p>Created by: <img class="avatar d-inline" src="{{user.avatar}}" alt="avatar"/> {{user.name}}, {{user.email}}</p>
-                    <p>from "{{catalogItem.title}}"</p>
+                    <div>
+                        <p>Created by: <img class="avatar d-inline" src="{{user.avatar}}" alt="avatar"/> {{user.name}}, {{user.email}}</p>
+                        <p>Created on: {{userItem.created_date}}</p>
+                        <p></p>
+                    </div>
+                </div>
+
+            <!-- Edit User Item Form -->
+            <!--catalog item id is a drop down menu-->
+            <div class="card my-4">
+                <h5 class="card-header">Edit post details for category "{{catalogItem.title}}"</h5>
+                <div class="card-body">
+                    <form action="" method="POST">
+                        <div class="form-group">
+                            <label for="catalogItem">Edit Category*</label>
+                            <select class="form-control" name="catalogItemId" id="catalogItemId" required="true">
+                                <option value="" selected="true">Select Category...</option>
+                                {% for item in catalog %}
+                                    {% if item.id != userItem.catalog_item_id %}
+                                        <option value="{{item.id}}">{{item.title}}</option>
+                                    {% else %}
+                                        <option value="{{item.id}}" selected>{{item.title}}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <label for="userItemTitle">Edit Post Title*</label>
+                            <input class="form-control" type="text" name="userItemTitle" value="{{userItem.title}}" required="true">
+                            <label for="description">Edit Description*</label>
+                            <textarea class="form-control" name="description" id="description" rows="4" cols="30" required="true">{{userItem.description}}</textarea>
+                            <label for="itemPicture">Edit Image source</label>
+                            <input class="form-control" type="text" name="itemPicture" id="itemPicture" value="{{userItem.item_picture}}">
+                            <hr>
+                            <div class="btn-group">
+                                <input class="btn btn-danger" type="submit" value="Edit">
+                                <input class="btn btn-primary" type="submit" value="Cancel" name="reset">
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </main>
-        
     </body>
 </html>

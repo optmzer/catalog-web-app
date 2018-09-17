@@ -23,6 +23,18 @@ DBSession = sessionmaker(bind=engine)
 
 session = DBSession()
 
+#### TODO Tester Methods Delete Before Submission ####
+
+def showUserItemDetails(userItem):
+    print("userItem.id = %d", userItem.id)
+    print("userItem.created_date = %d", userItem.created_date)
+    print("userItem.title = %d", userItem.title)
+    print("userItem.description = %d", userItem.description)
+    print("userItem.item_picture = %d", userItem.item_picture)
+    print("userItem.catalog_item_id = %d", userItem.catalog_item_id)
+    print("userItem.user_id = %d", userItem.user_id)
+
+
 ################ Getters/Setters ################
 
 def getCatalogItemsAll():
@@ -171,23 +183,30 @@ def createNewUserItem():
 # Edit a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/edit/', methods=['GET', 'POST'])
 def editUserItem(catalogItemId, userItemId):
+    _catalog = getCatalogItemsAll()
     _catalogItem = getCatalogItem(catalogItemId)
     _userItem = getUserItem(catalogItemId, userItemId)
     _user = getUser(_userItem.user_id)
     if request.method == 'POST':
-        if request.form['title']:
-            _title = request.form['title']
-            _description = request.form['description']
-            _itemPic = request.form['itemPicture']
-            _userId = 1
-            _catalogItemId = 1
-            userItem = UserItem(title = _title, description= _description, item_picture=_itemPic, user_id = _userId, catalog_item_id = _catalogItemId)
-            session.add(userItem)
+        if request.form['userItemTitle']:
+            # If fields are empty do not change them
+            print("========== OLD VALUES ==========")
+            showUserItemDetails(_userItem)
+
+            _userItem.title = request.form['userItemTitle']
+            _userItem.description = request.form['description']
+            _userItem.item_picture = request.form['itemPicture']
+            _userItem.catalog_item_id = request.form['catalogItemId']
+            session.add(_userItem)
             session.commit()
-            flash("CatalogItem: " + userItem.title + " added.")
-            return redirect(url_for('showUserItemsInCatalog'))
+            flash("userItem: " + _userItem.title + " was edited.")
+            # Go to edited user item
+            print("========== NEW VALUES ==========")
+            showUserItemDetails(_userItem)
+
+            return redirect(url_for('showUserItem', catalogItemId=_userItem.catalog_item_id, userItemId=_userItem.id))
     else:
-        return render_template('edituseritem.html', catalogItem = _catalogItem, userItem = _userItem, user = _user )
+        return render_template('edituseritem.html', catalog=_catalog, catalogItem = _catalogItem, userItem = _userItem, user = _user )
 
 
 # Delete a UserItem

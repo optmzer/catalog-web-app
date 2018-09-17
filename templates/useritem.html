@@ -61,7 +61,8 @@
         <!-- Post Content Column -->
         <div class="col-lg-8">
           <!-- Title -->
-          <h1 class="mt-4">Title: {{catalogItem.title}}</h1>
+          <h1 class="mt-4">{{userItem.title}}</h1>
+          <h4 class="mt-4">Catalog: {{catalogItem.title}}</h1>
           <!-- Avatar -->
           <img class="avatar d-inline" src="{{user.avatar}}" alt="Avatar" /> 
           <!-- Author -->
@@ -71,7 +72,7 @@
           </p>
           <hr>
           <!-- Date/Time -->
-          <p>Posted on {{catalogItem.created_date}}</p>
+          <p>Posted on {{userItem.created_date}}</p>
           <hr>
           <!-- Preview Image -->
           <img class="img-fluid rounded" src="{{userItem.item_picture}}" alt="">
