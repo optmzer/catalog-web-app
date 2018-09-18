@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
+import os
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from werkzeug.utils import secure_filename
 
 # Imports DB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-##### TODO Create DB classes and populate catalog
 from catalog_db_setup import Base, User, UserItem, CatalogItem
 
 ################ Create Flask app ################
+UPLOAD_FOLDER = './static/uploads'
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+MAX_CONTENT_LENGTH = 10 * 1024 * 1024 # 10Mb max file size
 
 app = Flask(__name__)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 ################ Create Connection to DB ################
 # init connection with DB
@@ -63,6 +69,11 @@ def getUser(userId):
     user = session.query(User).filter_by(id = userId).one()
     # print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
     return user
+
+def allowed_file(filename):
+    """Checks if file extension is in allowed set"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 ########## Routs ################
 ########## CatalogItem ##########
@@ -161,16 +172,27 @@ def showUserItem(catalogItemId, userItemId):
 def createNewUserItem():
     """
     Creates new UserItem
-    TODO make list of categories in the catalog to choose from
+    TODO update _userId for OAuth
     """
     catalog = getCatalogItemsAll()
     if request.method == 'POST':
         if request.form['userItemTitle']:
+            # Get post data
             _title = request.form['userItemTitle']
             _description = request.form['description']
-            _itemPic = request.form['itemPicture']
-            _userId = 1
+            _userId = 1 # TODO update for OAuth
             _catalogItemId = request.form['catalogItemId']
+            # Upload image file, Record image location for DB
+            try:
+                file = request.files['itemPicture']
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                _itemPic = os.path.join(app.config['UPLOAD_FOLDER'], filename).replace('.', '', 1)
+            except:
+                pass
+
+            # Write to DB
             userItem = UserItem(title = _title, description= _description, item_picture=_itemPic, user_id = _userId, catalog_item_id = _catalogItemId)
             session.add(userItem)
             session.commit()
@@ -190,20 +212,24 @@ def editUserItem(catalogItemId, userItemId):
     if request.method == 'POST':
         if request.form['userItemTitle']:
             # If fields are empty do not change them
-            print("========== OLD VALUES ==========")
-            showUserItemDetails(_userItem)
-
             _userItem.title = request.form['userItemTitle']
             _userItem.description = request.form['description']
-            _userItem.item_picture = request.form['itemPicture']
             _userItem.catalog_item_id = request.form['catalogItemId']
+            # Upload image file, Record image location for DB
+            # If image file is not selected/changed skipp
+            try:
+                file = request.files['itemPicture']
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                _userItem.item_picture = os.path.join(app.config['UPLOAD_FOLDER'], filename).replace('.', '', 1)
+            except:
+                pass
+            
             session.add(_userItem)
             session.commit()
             flash("userItem: " + _userItem.title + " was edited.")
             # Go to edited user item
-            print("========== NEW VALUES ==========")
-            showUserItemDetails(_userItem)
-
             return redirect(url_for('showUserItem', catalogItemId=_userItem.catalog_item_id, userItemId=_userItem.id))
     else:
         return render_template('edituseritem.html', catalog=_catalog, catalogItem = _catalogItem, userItem = _userItem, user = _user )

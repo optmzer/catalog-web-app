@@ -59,7 +59,7 @@
             <div class="card my-4">
                 <h5 class="card-header">Fill in post details:</h5>
                 <div class="card-body">
-                    <form action="" method="POST">
+                    <form action="" method="POST" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="catalogItem">Category*</label>
                             <select class="form-control" name="catalogItemId" id="catalogItemId" required="true">
@@ -73,7 +73,7 @@
                             <label for="description">Description*</label>
                             <textarea class="form-control" name="description" id="description" rows="4" cols="30" required="true"></textarea>
                             <label for="itemPicture">Image source</label>
-                            <input class="form-control" type="text" name="itemPicture" id="itemPicture">
+                            <input class="form-control" type="file" name="itemPicture" id="itemPicture">
                             <br>
                             <input class="btn btn-primary" type="submit" value="SUBMIT">
                         </div>
