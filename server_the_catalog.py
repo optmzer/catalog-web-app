@@ -1,12 +1,24 @@
 #!/usr/bin/env python3
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from werkzeug.utils import secure_filename
+
+from flask import Flask
+from flask import flash
+from flask import jsonify
+from flask import redirect
+from flask import render_template
+from flask import request
+from flask import url_for
 
 # Imports DB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from catalog_db_setup import Base, User, UserItem, CatalogItem
+
+from werkzeug.utils import secure_filename
+
+from catalog_db_setup import Base
+from catalog_db_setup import CatalogItem
+from catalog_db_setup import User
+from catalog_db_setup import UserItem
 
 ################ Create Flask app ################
 UPLOAD_FOLDER = './static/uploads'
@@ -31,14 +43,6 @@ session = DBSession()
 
 #### TODO Tester Methods Delete Before Submission ####
 
-def showUserItemDetails(userItem):
-    print("userItem.id = %d", userItem.id)
-    print("userItem.created_date = %d", userItem.created_date)
-    print("userItem.title = %d", userItem.title)
-    print("userItem.description = %d", userItem.description)
-    print("userItem.item_picture = %d", userItem.item_picture)
-    print("userItem.catalog_item_id = %d", userItem.catalog_item_id)
-    print("userItem.user_id = %d", userItem.user_id)
 
 
 ################ Getters/Setters ################
@@ -74,6 +78,12 @@ def allowed_file(filename):
     """Checks if file extension is in allowed set"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+########## Routs ################
+########## Login OAuth ##########
+# @app.route('/thecatalog/login/', methods=['GET', 'POST'])
+
+# @app.route('/thecatalog/logout/', methods=['GET', 'POST'])
 
 ########## Routs ################
 ########## CatalogItem ##########
@@ -258,6 +268,29 @@ def deleteUserItem(catalogItemId, userItemId):
 def pageNotFound():
     return render_template('pagenotfound.html')
 
+########## Routs ################
+########## JSON API #############
+
+#JSON APIs to view Restaurant Information
+@app.route('/thecatalog/<int:catalogItemId>/items/json')
+def catalogItemJSON(catalogItemId):
+    """Get all UserItems in a specified CatalogItem"""
+    userItems = getUserItems(catalogItemId)
+    return jsonify(userItems=[i.serialize for i in userItems])
+
+
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/json')
+def userItemJSON(catalogItemId, userItemId):
+    """Get specified UserItem based on catalogId and userItemId"""
+    userItem = getUserItem(catalogItemId, userItemId)
+    return jsonify(userItem = userItem.serialize)
+
+
+@app.route('/thecatalog/json')
+def catalogAllJSON():
+    """Get all CatalogItems"""
+    catalog = getCatalogItemsAll()
+    return jsonify(catalog = [c.serialize for c in catalog])
 
 if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself

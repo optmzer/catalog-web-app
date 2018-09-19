@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import sys
 import datetime
-from sqlalchemy import Column, ForeignKey, Integer, String, DateTime 
+from sqlalchemy import Column
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy import DateTime
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
@@ -57,6 +62,7 @@ class UserItem(Base):
     def serialize(self):
         """Return object data in easily serializeable format"""
         return {
+            'created_date': self.created_date,
             'title': self.title,
             'description': self.description,
             'id': self.id,
