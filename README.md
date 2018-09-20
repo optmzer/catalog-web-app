@@ -17,6 +17,8 @@ After cloning the app should looks like this:
 ```
 catalog/
     static/
+        img/ - Stores avatars for users with no pictures
+        uploads/ - Sores uploaded images
         custom/ - Custom css
         vendor/
             bootstrap/ - Standard bootstrap libraries
@@ -26,9 +28,15 @@ catalog/
     templates/
         catalogitem.html
         deletecatalogitem.html
+        deleteuseritem.html
         editcatalogitem.html
+        edituseritem.html
         index.html
         login.html
+        newcatalogitem.html
+        newuseritem.html
+        pagenotfound.html
+        useritem.html
     README.md
 ```
 
