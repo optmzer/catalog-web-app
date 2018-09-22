@@ -73,12 +73,12 @@ def createUser(login_session):
     newUser = User(
         name=login_session['username'],
         email=login_session['email'],
-        avatar=login_session['avatar']
+        avatar=login_session['picture']
         )
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
-    return user.id
+    return user
 
 def getUserById(userId):
     """Returns a User entry by the Id"""
@@ -88,7 +88,11 @@ def getUserById(userId):
 
 def getUserByEmail(email):
     """Returns a User entry by email"""
-    user = session.query(User).filter_by(email = email).one()
+    user = None
+    try:
+        user = session.query(User).filter_by(email = email).one()
+    except:
+        pass
     return user
 
 def getCatalogItemsAll():
@@ -211,10 +215,10 @@ def gconnect():
     login_session['email'] = data['email']
 
     # See if user entry exists, if it doesn't make a new one
-    user_id = getUserByEmail(login_session['email']).Id
-    if not user_id:
-        user_id = createUser(login_session)
-    login_session['user_id'] = user_id
+    user = getUserByEmail(login_session['email'])
+    if user == None:
+        user = createUser(login_session)
+    login_session['user_id'] = user.id
 
     output = ''
     output += '<h1>Welcome, '

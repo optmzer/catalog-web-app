@@ -2,6 +2,7 @@ __pycache__/
 
 # API keys
 client_secrets.json
+fb_client_secrets.json
 
 # local database
 *.db
