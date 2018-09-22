@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 import os
+import random
+import string
+import json
+import httplib2
+import requests
 
 from flask import Flask
 from flask import flash
@@ -9,10 +14,18 @@ from flask import render_template
 from flask import request
 from flask import url_for
 
+# Authentication imports
+from flask import session as login_session
+from flask import make_response
+
+from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import FlowExchangeError
+
 # Imports DB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+# Upload file name check
 from werkzeug.utils import secure_filename
 
 from catalog_db_setup import Base
@@ -21,12 +34,20 @@ from catalog_db_setup import User
 from catalog_db_setup import UserItem
 
 ################ Create Flask app ################
+# Upload constants
 UPLOAD_FOLDER = './static/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024 # 10Mb max file size
 
+# OAuth2.0 Google constants
+CLIEN_ID = json.loads(
+    open('client_secrets.json', 'r').read()
+)['web']['client_id']
+APPLICATION_NAME = "The Catalog"
+
 app = Flask(__name__)
 
+# app.config for Upload constants
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
@@ -46,6 +67,29 @@ session = DBSession()
 
 
 ################ Getters/Setters ################
+
+def createUser(login_session):
+    """Creates a User and ads it to DB"""
+    newUser = User(
+        name=login_session['username'],
+        email=login_session['email'],
+        avatar=login_session['avatar']
+        )
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+def getUserById(userId):
+    """Returns a User entry by the Id"""
+    user = session.query(User).filter_by(id = userId).one()
+    # print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
+    return user
+
+def getUserByEmail(email):
+    """Returns a User entry by email"""
+    user = session.query(User).filter_by(email = email).one()
+    return user
 
 def getCatalogItemsAll():
     return session.query(CatalogItem).all()
@@ -68,20 +112,156 @@ def getUserItem(catalogItemId, userItemId):
     # print("L33 userItem " + userItem.title)
     return userItem
 
-def getUser(userId):
-    """Returns a User by the Id"""
-    user = session.query(User).filter_by(id = userId).one()
-    # print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
-    return user
-
 def allowed_file(filename):
-    """Checks if file extension is in allowed set"""
+    """Checks if file extension is in allowed set
+    of types for upload
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 ########## Routs ################
 ########## Login OAuth ##########
-# @app.route('/thecatalog/login/', methods=['GET', 'POST'])
+@app.route('/thecatalog/login/', methods=['GET', 'POST'])
+def showLoginPage():
+    """Create anti forgery request token.
+    Store it in the login_session for later validation"""
+    state = ''.join(random.choice(
+        string.ascii_uppercase + string.digits) for x in range(32))
+    login_session['state'] = state
+    # Sent state to STATE property in html page
+    return render_template('login.html', STATE=state)
+
+
+@app.route('/gconnect', methods = ['POST'])
+def gconnect():
+    # Validate state token
+    if(request.args.get('state') != login_session['state']):
+        response = make_response(json.dumps('Invalid state parameter.'), 401)
+        response.headers['Content-type'] = 'application/json'
+        return response
+    # Obtain authorization code
+    code = request.data
+
+    try:
+        # Upgrade the authorization code into a credentials object
+        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow.redirect_uri = 'postmessage'
+        credentials = oauth_flow.step2_exchange(code)
+    except FlowExchangeError as flow_error:
+        print('Failed to upgrade the authorization code. error = '+ flow_error)
+        response = make_response(
+            json.dumps('Failed to upgrade the authorization code.'), 401
+        )
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    # Check that the access token is valid
+    access_token = credentials.access_token
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    h = httplib2.Http()
+    result = json.loads(h.request(url, 'GET')[1])
+    # If there was an error in the access token info, abort.
+    if(result.get('error') is not None):
+        response = make_response(json.dumps(result.get('error')), 500)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Verify that the access token is used for the intended user.
+    gplus_id = credentials.id_token['sub']
+    if(result['user_id'] != gplus_id):
+        response = make_response(
+            json.dumps("Token's user ID does not match given user ID."), 401
+        )
+        print("Token's user ID does not match given user ID.")
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Verify that access token is valid for this app.
+    if(result['issued_to'] != CLIEN_ID):
+        response = make_response(
+            json.dumps("Token's client ID does not match app's."), 401
+        )
+        print("Token's client ID does not match app's.")
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    stored_access_token = login_session.get('access_token')
+    stored_gplus_id = login_session.get('gplus_id')
+    if(stored_access_token is not None and gplus_id == stored_gplus_id):
+        response = make_response(
+            json.dumps("Current user is already connected"), 200
+        )
+        response.headers['Content-Type'] = 'application/json'
+        return response
+
+    # Store the access token in the session for later use.
+    login_session['access_token'] = credentials.access_token
+    login_session['gplus_id'] = gplus_id
+
+    # Get user info
+    userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
+    params = {'access_token': credentials.access_token, 'alt': 'json'}
+    answer = requests.get(userinfo_url, params = params)
+
+    data = answer.json()
+
+    # Added provider id
+    login_session['provider'] = 'google'
+    login_session['username'] = data['name']
+    login_session['picture'] = data['picture']
+    login_session['email'] = data['email']
+
+    # See if user entry exists, if it doesn't make a new one
+    user_id = getUserByEmail(login_session['email']).Id
+    if not user_id:
+        user_id = createUser(login_session)
+    login_session['user_id'] = user_id
+
+    output = ''
+    output += '<h1>Welcome, '
+    output += login_session['username']
+    output += '!</h1>'
+    output += '<img src="'
+    output += login_session['picture']
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    flash("you are now logged in as %s" % login_session['username'])
+    print ("done!")
+    return output
+
+
+@app.route('/gdisconnect', methods=['POST', 'GET'])
+def gdisconnect():
+    # Getting errors 400
+    # "error": "invalid_token",
+    # "error_description": "Token expired or revoked"
+    # When trying to disconnect logged in user.
+    # Only disconnect a connected user.
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        response = make_response(
+            json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    url = "https://accounts.google.com/o/oauth2/revoke?token={}".format(access_token)
+    headers={'Content-Type': 'application/x-www-form-urlencoded'}
+    print("url = " + url)
+    h = httplib2.Http()
+    result = h.request(url, 'GET', headers=headers)
+    if(result[0]['status'] == '200'):
+        response = make_response(json.dumps("Successfully disconnected"), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        if(result[1] is not None):
+            data = json.loads(result[1])
+            err = data['error']
+            err_desc = data['error_description']
+        response = make_response(
+            json.dumps(
+                "Failed to revoke token for given user. Error: {}, Error Description: {} "
+                .format(err, err_desc)), 400
+        )
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 # @app.route('/thecatalog/logout/', methods=['GET', 'POST'])
 
@@ -171,7 +351,7 @@ def showUserItem(catalogItemId, userItemId):
         catalog = getCatalogItemsAll()
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
-        user = getUser(userItem.user_id)
+        user = getUserById(userItem.user_id)
         return render_template("useritem.html", catalog=catalog, catalogItem=catalogItem, userItem=userItem, user=user)
     except:
         return redirect(url_for('pageNotFound'))
@@ -218,7 +398,7 @@ def editUserItem(catalogItemId, userItemId):
     _catalog = getCatalogItemsAll()
     _catalogItem = getCatalogItem(catalogItemId)
     _userItem = getUserItem(catalogItemId, userItemId)
-    _user = getUser(_userItem.user_id)
+    _user = getUserById(_userItem.user_id)
     if request.method == 'POST':
         if request.form['userItemTitle']:
             # If fields are empty do not change them
@@ -251,7 +431,7 @@ def deleteUserItem(catalogItemId, userItemId):
     try:
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
-        user = getUser(userItem.user_id)
+        user = getUserById(userItem.user_id)
         if request.method == 'POST':
             session.delete(userItem)
             session.commit()

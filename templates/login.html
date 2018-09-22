@@ -50,7 +50,7 @@
         <div id="signinButton" class="btn btn-lg w-50">
           <span class="g-signin"
             data-scope="openid email"
-            data-clientid="992130204778-1v1snit75rrg87a3pmbou6lfpgfojlrl.apps.googleusercontent.com"
+            data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
             data-redirecturi="postmessage"
             data-accesstype="offline"
             data-cookiepolicy="single_host_origin"
@@ -61,7 +61,7 @@
         <div id="signinButton" class="btn btn-lg w-50">
           <span class="g-signin"
             data-scope="openid email"
-            data-clientid="992130204778-1v1snit75rrg87a3pmbou6lfpgfojlrl.apps.googleusercontent.com"
+            data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
             data-redirecturi="postmessage"
             data-accesstype="offline"
             data-cookiepolicy="single_host_origin"
@@ -72,7 +72,7 @@
         <div id="signinButton" class="btn btn-lg w-50">
           <span class="g-signin"
             data-scope="openid email"
-            data-clientid="992130204778-1v1snit75rrg87a3pmbou6lfpgfojlrl.apps.googleusercontent.com"
+            data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
             data-redirecturi="postmessage"
             data-accesstype="offline"
             data-cookiepolicy="single_host_origin"
@@ -81,7 +81,8 @@
           </span>
         </div>
       </div>
-      
+      <hr>
+      <div id="result"></div>
       <p class="mt-5 mb-3 text-muted text-center">© 2017-2018</p>
     </form>
 
@@ -104,7 +105,7 @@
             if (result) {
               $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
               setTimeout(function() {
-              window.location.href = "/restaurant";
+              window.location.href = "/thecatalog";
               }, 4000);
             } else if (authResult['error']) {
               console.log('There was an error: ' + authResult['error']);
