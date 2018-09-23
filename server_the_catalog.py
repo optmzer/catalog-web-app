@@ -24,6 +24,7 @@ from oauth2client.client import FlowExchangeError
 # Imports DB
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy import exc
 
 # Upload file name check
 from werkzeug.utils import secure_filename
@@ -33,11 +34,11 @@ from catalog_db_setup import CatalogItem
 from catalog_db_setup import User
 from catalog_db_setup import UserItem
 
-################ Create Flask app ################
+# Create Flask app ################
 # Upload constants
 UPLOAD_FOLDER = './static/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
-MAX_CONTENT_LENGTH = 10 * 1024 * 1024 # 10Mb max file size
+MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10Mb max file size
 
 # OAuth2.0 Google constants
 CLIEN_ID = json.loads(
@@ -51,70 +52,78 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
-################ Create Connection to DB ################
+# Create Connection to DB ################
 # init connection with DB
 engine = create_engine('sqlite:///thecatalog.db?check_same_thread=False')
 
 # Connection between class def and corresp table in DB
 Base.metadata.bind = engine
-# Create delete and other commands Alchemy does via an interface called a Session
+
 DBSession = sessionmaker(bind=engine)
 
 session = DBSession()
 
-#### TODO Tester Methods Delete Before Submission ####
 
-
-
-################ Getters/Setters ################
-
+# Getters/Setters ################
 def createUser(login_session):
     """Creates a User and ads it to DB"""
     newUser = User(
         name=login_session['username'],
         email=login_session['email'],
-        avatar=login_session['picture']
+        avatar=login_session['avatar']
         )
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
     return user
 
+
 def getUserById(userId):
     """Returns a User entry by the Id"""
-    user = session.query(User).filter_by(id = userId).one()
+    user = session.query(User).filter_by(id=userId).one()
     # print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
     return user
+
 
 def getUserByEmail(email):
     """Returns a User entry by email"""
     user = None
     try:
-        user = session.query(User).filter_by(email = email).one()
-    except:
+        user = session.query(User).filter_by(email=email).one()
+    except exc.SQLAlchemyError:
         pass
     return user
 
+
 def getCatalogItemsAll():
-    return session.query(CatalogItem).all()
+    return session.query(CatalogItem).order_by(CatalogItem.title).all()
+
 
 def getCatalogItem(catalogItemId):
     """Returns a CatalogItem by its Id"""
-    catalogItem = session.query(CatalogItem).filter_by(id = catalogItemId).one()
+    catalogItem = session.query(CatalogItem).filter_by(id=catalogItemId).one()
     # print("L28 CatalogItem = " + catalogItem.title + " ##########")
     return catalogItem
 
+
 def getUserItems(catalogItemId):
     """Returns all UserItems for that CatalogItem by CatalogItem.id"""
-    return session.query(UserItem).filter_by(catalog_item_id = catalogItemId).all()
+    return session.query(
+                UserItem).filter_by(
+                    catalog_item_id=catalogItemId).order_by(
+                        UserItem.title).all()
+
 
 def getUserItem(catalogItemId, userItemId):
-    """Returns UserItem for a particular User Id and for a particular 
+    """Returns UserItem for a particular User Id and for a particular
     CatalogItem Id"""
     catalogItem = getCatalogItem(catalogItemId)
-    userItem = session.query(UserItem).filter_by(catalog_item_id = catalogItem.id, id = userItemId).one()
+    userItem = session.query(UserItem).filter_by(
+                                        catalog_item_id=catalogItem.id,
+                                        id=userItemId).one()
     # print("L33 userItem " + userItem.title)
     return userItem
+
 
 def allowed_file(filename):
     """Checks if file extension is in allowed set
@@ -123,8 +132,9 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-########## Routs ################
-########## Login OAuth ##########
+
+# Routs ################
+# Login OAuth ##########
 @app.route('/thecatalog/login/', methods=['GET', 'POST'])
 def showLoginPage():
     """Create anti forgery request token.
@@ -136,7 +146,7 @@ def showLoginPage():
     return render_template('login.html', STATE=state)
 
 
-@app.route('/gconnect', methods = ['POST'])
+@app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
     if(request.args.get('state') != login_session['state']):
@@ -152,7 +162,8 @@ def gconnect():
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError as flow_error:
-        print('Failed to upgrade the authorization code. error = '+ flow_error)
+        print('Failed to upgrade the authorization code. error = '
+              + flow_error)
         response = make_response(
             json.dumps('Failed to upgrade the authorization code.'), 401
         )
@@ -160,7 +171,9 @@ def gconnect():
         return response
     # Check that the access token is valid
     access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    url = (
+          'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
+          % access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
     # If there was an error in the access token info, abort.
@@ -204,19 +217,19 @@ def gconnect():
     # Get user info
     userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
     params = {'access_token': credentials.access_token, 'alt': 'json'}
-    answer = requests.get(userinfo_url, params = params)
+    answer = requests.get(userinfo_url, params=params)
 
     data = answer.json()
 
     # Added provider id
     login_session['provider'] = 'google'
     login_session['username'] = data['name']
-    login_session['picture'] = data['picture']
+    login_session['avatar'] = data['picture']
     login_session['email'] = data['email']
 
     # See if user entry exists, if it doesn't make a new one
     user = getUserByEmail(login_session['email'])
-    if user == None:
+    if user is None:
         user = createUser(login_session)
     login_session['user_id'] = user.id
 
@@ -225,7 +238,7 @@ def gconnect():
     output += login_session['username']
     output += '!</h1>'
     output += '<img src="'
-    output += login_session['picture']
+    output += login_session['avatar']
     output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print ("done!")
@@ -245,8 +258,10 @@ def gdisconnect():
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = "https://accounts.google.com/o/oauth2/revoke?token={}".format(access_token)
-    headers={'Content-Type': 'application/x-www-form-urlencoded'}
+    url = """
+        https://accounts.google.com/o/oauth2/revoke?token={}
+        """.format(access_token)
+    headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     print("url = " + url)
     h = httplib2.Http()
     result = h.request(url, 'GET', headers=headers)
@@ -260,24 +275,26 @@ def gdisconnect():
             err = data['error']
             err_desc = data['error_description']
         response = make_response(
-            json.dumps(
-                "Failed to revoke token for given user. Error: {}, Error Description: {} "
-                .format(err, err_desc)), 400
-        )
+                    json.dumps(
+                        """Failed to revoke token for given user. Error: {},
+                        Error Description: {}
+                        """.format(err, err_desc)), 400)
         response.headers['Content-Type'] = 'application/json'
         return response
 
+
 # @app.route('/thecatalog/logout/', methods=['GET', 'POST'])
 
-########## Routs ################
-########## CatalogItem ##########
+# Routs ################
+# CatalogItem ##########
 
 # Show all catalog entry
 @app.route('/')
 @app.route('/thecatalog/')
 def showCatalog():
     """Shows fromt page of the catalog"""
-    return render_template('index.html', catalog = getCatalogItemsAll())
+    return render_template('index.html', catalog=getCatalogItemsAll())
+
 
 # Create new catalogItem
 # TODO assign user id from the form
@@ -285,13 +302,16 @@ def showCatalog():
 def newCatalogItem():
     if request.method == 'POST':
         if request.form['catalogItemTitle']:
-            catalogItem = CatalogItem(title = request.form['catalogItemTitle'], user_id = 1)
+            catalogItem = CatalogItem(
+                            title=request.form['catalogItemTitle'],
+                            user_id=1)
             session.add(catalogItem)
             session.commit()
             flash("CatalogItem: " + catalogItem.title + " added.")
             return redirect(url_for('showCatalog'))
     else:
         return render_template('newcatalogitem.html')
+
 
 # Edit catalog item
 @app.route('/thecatalog/<int:catalogItemId>/edit/', methods=['GET', 'POST'])
@@ -301,14 +321,17 @@ def editCatalogItem(catalogItemId):
     if request.method == 'POST':
         if request.form['catalogItemTitle']:
             catalogItem.title = request.form['catalogItemTitle']
-            message = "New Catalog entry is " + request.form['catalogItemTitle']
+            message = ("New Catalog entry is "
+                       + request.form['catalogItemTitle'])
             session.add(catalogItem)
             session.commit()
             flash(message)
-            ## Redirect
+            # Redirect
             return redirect(url_for('showCatalog'))
     else:
-        return render_template('editcatalogitem.html', catalogItem = catalogItem)
+        return render_template(
+                'editcatalogitem.html',
+                catalogItem=catalogItem)
 
 
 # Delete CatalogItem
@@ -318,16 +341,20 @@ def deleteCatalogItem(catalogItemId):
         catalogItem = getCatalogItem(catalogItemId)
         if request.method == 'POST':
             if request.form['reset']:
-                return redirect(url_for('showUserItemsInCatalog', catalogItemId=catalogItemId))
+                return redirect(url_for(
+                            'showUserItemsInCatalog',
+                            catalogItemId=catalogItemId))
 
             session.delete(catalogItem)
             session.commit()
             flash("CatalogItem " + catalogItem.title + " was deleted")
-            ## Redirect
+            # Redirect
             return redirect(url_for('showCatalog'))
         else:
-            return render_template('deletecatalogitem.html', catalogItem = catalogItem)
-    except :
+            return render_template(
+                    'deletecatalogitem.html',
+                    catalogItem=catalogItem)
+    except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
 
@@ -337,11 +364,14 @@ def showUserItemsInCatalog(catalogItemId):
     """Shows list of UserItems in this category(CatalogItem)"""
     catalogItem = getCatalogItem(catalogItemId)
     userItems = getUserItems(catalogItemId)
-    return render_template("catalogitem.html", catalogItem=catalogItem, userItems=userItems)
+    return render_template(
+                "catalogitem.html",
+                catalogItem=catalogItem,
+                userItems=userItems)
 
 
-########## Routs ################
-########## UserItem #############
+# Routs ################
+# UserItem #############
 
 
 # Show a UserItem
@@ -356,8 +386,13 @@ def showUserItem(catalogItemId, userItemId):
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
         user = getUserById(userItem.user_id)
-        return render_template("useritem.html", catalog=catalog, catalogItem=catalogItem, userItem=userItem, user=user)
-    except:
+        return render_template(
+                    "useritem.html",
+                    catalog=catalog,
+                    catalogItem=catalogItem,
+                    userItem=userItem,
+                    user=user)
+    except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
 
@@ -374,30 +409,40 @@ def createNewUserItem():
             # Get post data
             _title = request.form['userItemTitle']
             _description = request.form['description']
-            _userId = 1 # TODO update for OAuth
+            _userId = 1  # TODO update for OAuth
             _catalogItemId = request.form['catalogItemId']
             # Upload image file, Record image location for DB
             try:
                 file = request.files['itemPicture']
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                _itemPic = os.path.join(app.config['UPLOAD_FOLDER'], filename).replace('.', '', 1)
-            except:
+                    file.save(os.path.join(
+                                app.config['UPLOAD_FOLDER'],
+                                filename))
+                _itemPic = os.path.join(
+                                app.config['UPLOAD_FOLDER'],
+                                filename).replace('.', '', 1)
+            except Exception:
                 pass
 
             # Write to DB
-            userItem = UserItem(title = _title, description= _description, item_picture=_itemPic, user_id = _userId, catalog_item_id = _catalogItemId)
+            userItem = UserItem(title=_title,
+                                description=_description,
+                                item_picture=_itemPic,
+                                user_id=_userId,
+                                catalog_item_id=_catalogItemId)
             session.add(userItem)
             session.commit()
             flash("CatalogItem: " + userItem.title + " added.")
-            return redirect(url_for('showUserItemsInCatalog', catalogItemId=_catalogItemId))
+            return redirect(url_for('showUserItemsInCatalog',
+                                    catalogItemId=_catalogItemId))
     else:
         return render_template('newuseritem.html', catalog=catalog)
 
 
 # Edit a UserItem
-@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/edit/', methods=['GET', 'POST'])
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/edit/',
+           methods=['GET', 'POST'])
 def editUserItem(catalogItemId, userItemId):
     _catalog = getCatalogItemsAll()
     _catalogItem = getCatalogItem(catalogItemId)
@@ -415,22 +460,32 @@ def editUserItem(catalogItemId, userItemId):
                 file = request.files['itemPicture']
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                _userItem.item_picture = os.path.join(app.config['UPLOAD_FOLDER'], filename).replace('.', '', 1)
-            except:
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                           filename))
+                _userItem.item_picture = os.path.join(
+                                            app.config['UPLOAD_FOLDER'],
+                                            filename).replace('.', '', 1)
+            except Exception:
                 pass
-            
+
             session.add(_userItem)
             session.commit()
             flash("userItem: " + _userItem.title + " was edited.")
             # Go to edited user item
-            return redirect(url_for('showUserItem', catalogItemId=_userItem.catalog_item_id, userItemId=_userItem.id))
+            return redirect(url_for('showUserItem',
+                            catalogItemId=_userItem.catalog_item_id,
+                            userItemId=_userItem.id))
     else:
-        return render_template('edituseritem.html', catalog=_catalog, catalogItem = _catalogItem, userItem = _userItem, user = _user )
+        return render_template('edituseritem.html',
+                               catalog=_catalog,
+                               catalogItem=_catalogItem,
+                               userItem=_userItem,
+                               user=_user)
 
 
 # Delete a UserItem
-@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/delete/', methods=['GET', 'POST'])
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/delete/',
+           methods=['GET', 'POST'])
 def deleteUserItem(catalogItemId, userItemId):
     try:
         catalogItem = getCatalogItem(catalogItemId)
@@ -440,11 +495,14 @@ def deleteUserItem(catalogItemId, userItemId):
             session.delete(userItem)
             session.commit()
             flash("CatalogItem " + userItem.title + " was deleted")
-            ## Redirect
+            # Redirect
             return redirect(url_for('showUserItemsInCatalog'))
         else:
-            return render_template('deleteuseritem.html', catalogItem = catalogItem, userItem=userItem, user=user)
-    except :
+            return render_template('deleteuseritem.html',
+                                   catalogItem=catalogItem,
+                                   userItem=userItem,
+                                   user=user)
+    except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
 
@@ -452,10 +510,12 @@ def deleteUserItem(catalogItemId, userItemId):
 def pageNotFound():
     return render_template('pagenotfound.html')
 
-########## Routs ################
-########## JSON API #############
 
-#JSON APIs to view Restaurant Information
+# Routs ################
+# JSON API #############
+
+
+# JSON APIs to view Restaurant Information
 @app.route('/thecatalog/<int:catalogItemId>/items/json')
 def catalogItemJSON(catalogItemId):
     """Get all UserItems in a specified CatalogItem"""
@@ -467,14 +527,15 @@ def catalogItemJSON(catalogItemId):
 def userItemJSON(catalogItemId, userItemId):
     """Get specified UserItem based on catalogId and userItemId"""
     userItem = getUserItem(catalogItemId, userItemId)
-    return jsonify(userItem = userItem.serialize)
+    return jsonify(userItem=userItem.serialize)
 
 
 @app.route('/thecatalog/json')
 def catalogAllJSON():
     """Get all CatalogItems"""
     catalog = getCatalogItemsAll()
-    return jsonify(catalog = [c.serialize for c in catalog])
+    return jsonify(catalog=[c.serialize for c in catalog])
+
 
 if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself
@@ -482,4 +543,4 @@ if __name__ == '__main__':
     app.secret_key = 'appSecretKey'
     app.debug = True
     # param specifies on port 5000
-    app.run(host = '0.0.0.0', port = 5000) 
+    app.run(host='0.0.0.0', port=5000)
