@@ -13,8 +13,9 @@ from sqlalchemy import create_engine
 
 Base = declarative_base()
 
-########
+
 class User(Base):
+    """Defines User table"""
     __tablename__ = 'user'
     # Mapper
     id = Column(Integer, primary_key=True)
@@ -24,16 +25,17 @@ class User(Base):
     avatar = Column(String(250))
 
 
-########
 class CatalogItem(Base):
+    """Defines CatalogItem table"""
     __tablename__ = 'catalog_item'
     # Mapper
-    id = Column(Integer, primary_key = True)
-    title = Column(String(80), nullable = False)
+    id = Column(Integer, primary_key=True)
+    title = Column(String(80), nullable=False)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     # user_id is a foreign key
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
+
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
@@ -42,13 +44,13 @@ class CatalogItem(Base):
         }
 
 
-########
 class UserItem(Base):
+    """Defines UserItem table"""
     __tablename__ = 'user_item'
     # Mapper
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
-    title = Column(String(80), nullable = False)
+    title = Column(String(80), nullable=False)
     description = Column(String(250))
     item_picture = Column(String(250))
     # catalog_item_id is a foreign key
@@ -70,7 +72,7 @@ class UserItem(Base):
         }
 
 
-########## Insert at the end of the file ##########
+# Insert at the end of the file ##########
 engine = create_engine('sqlite:///thecatalog.db')
 
 # Adds classes as new tables in our DB
