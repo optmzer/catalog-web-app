@@ -39,10 +39,13 @@
                       </div>
                     </li>
                   </ul>
-                  <form class="form-inline my-2 my-lg-0">
-                    <input class="form-control mr-sm-2" placeholder="Search" aria-label="Search" type="text">
-                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Log in</button>
-                  </form>
+                  <div class="my-2 my-lg-0">
+                    {% if not login_session['username'] %}
+                      <a class="btn btn-outline-success my-2 my-sm-0" href="{{url_for('showLoginPage')}}" type="submit">Log in</a>
+                    {% else %}
+                      <a class="btn btn-outline-success my-2 my-sm-0" href="{{url_for('gdisconnect')}}" type="submit">Log out</a>
+                    {% endif %}
+                  </div>
                 </div>
               </nav>
     <div>

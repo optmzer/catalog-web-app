@@ -142,6 +142,9 @@ def showLoginPage():
     state = ''.join(random.choice(
         string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
+    print("======== Login session started ========")
+    for key in login_session:
+        print("login_session.{} : {}", (key, login_session[key]))
     # Sent state to STATE property in html page
     return render_template('login.html', STATE=state)
 
@@ -155,12 +158,14 @@ def gconnect():
         return response
     # Obtain authorization code
     code = request.data
-
+    print("=== Authorization code = {}", code)
     try:
         # Upgrade the authorization code into a credentials object
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
+        print("==== Got credentials from G+")
+        print("credentials = {}", credentials)
     except FlowExchangeError as flow_error:
         print('Failed to upgrade the authorization code. error = '
               + flow_error)
@@ -293,7 +298,9 @@ def gdisconnect():
 @app.route('/thecatalog/')
 def showCatalog():
     """Shows fromt page of the catalog"""
-    return render_template('index.html', catalog=getCatalogItemsAll())
+    return render_template('index.html',
+                           catalog=getCatalogItemsAll(),
+                           login_session=login_session)
 
 
 # Create new catalogItem
@@ -310,7 +317,8 @@ def newCatalogItem():
             flash("CatalogItem: " + catalogItem.title + " added.")
             return redirect(url_for('showCatalog'))
     else:
-        return render_template('newcatalogitem.html')
+        return render_template('newcatalogitem.html',
+                               login_session=login_session)
 
 
 # Edit catalog item
@@ -329,9 +337,9 @@ def editCatalogItem(catalogItemId):
             # Redirect
             return redirect(url_for('showCatalog'))
     else:
-        return render_template(
-                'editcatalogitem.html',
-                catalogItem=catalogItem)
+        return render_template('editcatalogitem.html',
+                               catalogItem=catalogItem,
+                               login_session=login_session)
 
 
 # Delete CatalogItem
@@ -351,9 +359,9 @@ def deleteCatalogItem(catalogItemId):
             # Redirect
             return redirect(url_for('showCatalog'))
         else:
-            return render_template(
-                    'deletecatalogitem.html',
-                    catalogItem=catalogItem)
+            return render_template('deletecatalogitem.html',
+                                   catalogItem=catalogItem,
+                                   login_session=login_session)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
@@ -364,10 +372,10 @@ def showUserItemsInCatalog(catalogItemId):
     """Shows list of UserItems in this category(CatalogItem)"""
     catalogItem = getCatalogItem(catalogItemId)
     userItems = getUserItems(catalogItemId)
-    return render_template(
-                "catalogitem.html",
-                catalogItem=catalogItem,
-                userItems=userItems)
+    return render_template("catalogitem.html",
+                           catalogItem=catalogItem,
+                           userItems=userItems,
+                           login_session=login_session)
 
 
 # Routs ################
@@ -386,12 +394,12 @@ def showUserItem(catalogItemId, userItemId):
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
         user = getUserById(userItem.user_id)
-        return render_template(
-                    "useritem.html",
-                    catalog=catalog,
-                    catalogItem=catalogItem,
-                    userItem=userItem,
-                    user=user)
+        return render_template("useritem.html",
+                               catalog=catalog,
+                               catalogItem=catalogItem,
+                               userItem=userItem,
+                               user=user,
+                               login_session=login_session)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
@@ -437,17 +445,28 @@ def createNewUserItem():
             return redirect(url_for('showUserItemsInCatalog',
                                     catalogItemId=_catalogItemId))
     else:
-        return render_template('newuseritem.html', catalog=catalog)
+        return render_template('newuseritem.html',
+                               catalog=catalog,
+                               login_session=login_session)
 
 
 # Edit a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/edit/',
            methods=['GET', 'POST'])
 def editUserItem(catalogItemId, userItemId):
-    _catalog = getCatalogItemsAll()
-    _catalogItem = getCatalogItem(catalogItemId)
-    _userItem = getUserItem(catalogItemId, userItemId)
-    _user = getUserById(_userItem.user_id)
+    try:
+        _catalog = getCatalogItemsAll()
+        _catalogItem = getCatalogItem(catalogItemId)
+        _userItem = getUserItem(catalogItemId, userItemId)
+        _user = getUserById(_userItem.user_id)
+    except exc.SQLAlchemyError:
+        return redirect(url_for('pageNotFound'))
+    
+    if request.method == 'POST' and request.form['reset']:
+        return redirect(url_for('showUserItem',
+                            catalogItemId=_userItem.catalog_item_id,
+                            userItemId=_userItem.id))
+
     if request.method == 'POST':
         if request.form['userItemTitle']:
             # If fields are empty do not change them
@@ -480,7 +499,8 @@ def editUserItem(catalogItemId, userItemId):
                                catalog=_catalog,
                                catalogItem=_catalogItem,
                                userItem=_userItem,
-                               user=_user)
+                               user=_user,
+                               login_session=login_session)
 
 
 # Delete a UserItem
@@ -491,17 +511,22 @@ def deleteUserItem(catalogItemId, userItemId):
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
         user = getUserById(userItem.user_id)
+        if request.method == 'POST' and request.form['reset']:
+            return redirect(url_for('showUserItemsInCatalog',
+                                    catalogItemId=catalogItemId))
         if request.method == 'POST':
             session.delete(userItem)
             session.commit()
             flash("CatalogItem " + userItem.title + " was deleted")
             # Redirect
-            return redirect(url_for('showUserItemsInCatalog'))
+            return redirect(url_for('showUserItemsInCatalog',
+                                    catalogItemId=catalogItemId))
         else:
             return render_template('deleteuseritem.html',
                                    catalogItem=catalogItem,
                                    userItem=userItem,
-                                   user=user)
+                                   user=user,
+                                   login_session=login_session)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
