@@ -63,6 +63,11 @@ DBSession = sessionmaker(bind=engine)
 
 session = DBSession()
 
+#######
+def printLoginSession(message):
+    print("{}".format(message))
+    for key in login_session:
+        print("login_session.{} : {}".format(key, login_session[key]))
 
 # Getters/Setters ################
 def createUser(login_session):
@@ -81,7 +86,6 @@ def createUser(login_session):
 def getUserById(userId):
     """Returns a User entry by the Id"""
     user = session.query(User).filter_by(id=userId).one()
-    # print("L49 User.id = %d Name: %s ##########" % (user.id, user.name))
     return user
 
 
@@ -102,7 +106,6 @@ def getCatalogItemsAll():
 def getCatalogItem(catalogItemId):
     """Returns a CatalogItem by its Id"""
     catalogItem = session.query(CatalogItem).filter_by(id=catalogItemId).one()
-    # print("L28 CatalogItem = " + catalogItem.title + " ##########")
     return catalogItem
 
 
@@ -121,7 +124,6 @@ def getUserItem(catalogItemId, userItemId):
     userItem = session.query(UserItem).filter_by(
                                         catalog_item_id=catalogItem.id,
                                         id=userItemId).one()
-    # print("L33 userItem " + userItem.title)
     return userItem
 
 
@@ -142,9 +144,9 @@ def showLoginPage():
     state = ''.join(random.choice(
         string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
-    print("======== Login session started ========")
-    for key in login_session:
-        print("login_session.{} : {}", (key, login_session[key]))
+
+    printLoginSession("======== Login session started ========")
+
     # Sent state to STATE property in html page
     return render_template('login.html', STATE=state)
 
@@ -158,14 +160,14 @@ def gconnect():
         return response
     # Obtain authorization code
     code = request.data
-    print("=== Authorization code = {}", code)
+    print("=== Authorization code = {}".format(code))
     try:
         # Upgrade the authorization code into a credentials object
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
         print("==== Got credentials from G+")
-        print("credentials = {}", credentials)
+        print("credentials = {}".format(credentials))
     except FlowExchangeError as flow_error:
         print('Failed to upgrade the authorization code. error = '
               + flow_error)
@@ -257,15 +259,15 @@ def gdisconnect():
     # "error_description": "Token expired or revoked"
     # When trying to disconnect logged in user.
     # Only disconnect a connected user.
+
     access_token = login_session.get('access_token')
     if access_token is None:
         response = make_response(
             json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = """
-        https://accounts.google.com/o/oauth2/revoke?token={}
-        """.format(access_token)
+    url = ("https://accounts.google.com/o/oauth2/revoke?token="
+           + access_token)
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
     print("url = " + url)
     h = httplib2.Http()
@@ -288,7 +290,29 @@ def gdisconnect():
         return response
 
 
-# @app.route('/thecatalog/logout/', methods=['GET', 'POST'])
+@app.route('/disconnect', methods=['POST', 'GET'])
+def disconnect():
+    printLoginSession("===== Started Disconnection session")
+    if 'provider' in login_session:
+        if login_session['provider'] == 'google':
+            gdisconnect()
+            del login_session['access_token']
+            del login_session['gplus_id']
+            del login_session['state']
+        # if login_session['provider'] == 'facebook':
+        #     fbdisconnect()
+        #     del login_session['facebook_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['avatar']
+        del login_session['user_id']
+        del login_session['provider']
+        printLoginSession("===== Finished Disconnection session")
+        flash("You have been logged out successfully.")
+        return redirect(url_for('showCatalog'))
+    else:
+        flash("Cannot find your session details or you were not logged in.")
+        return redirect(url_for('showCatalog'))
 
 # Routs ################
 # CatalogItem ##########
@@ -461,7 +485,7 @@ def editUserItem(catalogItemId, userItemId):
         _user = getUserById(_userItem.user_id)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
-    
+    # If cancel button pressed redirect.
     if request.method == 'POST' and request.form['reset']:
         return redirect(url_for('showUserItem',
                             catalogItemId=_userItem.catalog_item_id,

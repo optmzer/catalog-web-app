@@ -46,7 +46,7 @@
                     {% if not login_session['username'] %}
                         <a class="btn btn-outline-success my-2 my-sm-0" href="{{url_for('showLoginPage')}}" type="submit">Log in</a>
                     {% else %}
-                        <a class="btn btn-outline-success my-2 my-sm-0" href="{{url_for('gdisconnect')}}" type="submit">Log out</a>
+                        <a class="btn btn-outline-success my-2 my-sm-0" href="{{url_for('disconnect')}}" type="submit">Log out</a>
                     {% endif %}
                 </div>
             </div>
