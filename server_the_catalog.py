@@ -25,6 +25,8 @@ from oauth2client.client import FlowExchangeError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import exc
+from sqlalchemy import desc
+
 
 # Upload file name check
 from werkzeug.utils import secure_filename
@@ -107,6 +109,10 @@ def getCatalogItem(catalogItemId):
     """Returns a CatalogItem by its Id"""
     catalogItem = session.query(CatalogItem).filter_by(id=catalogItemId).one()
     return catalogItem
+
+
+def getUserItemsNewest(howMany):
+    return session.query(UserItem).order_by(desc(UserItem.created_date)).limit(howMany)
 
 
 def getUserItems(catalogItemId):
@@ -254,12 +260,6 @@ def gconnect():
 
 @app.route('/gdisconnect', methods=['POST', 'GET'])
 def gdisconnect():
-    # Getting errors 400
-    # "error": "invalid_token",
-    # "error_description": "Token expired or revoked"
-    # When trying to disconnect logged in user.
-    # Only disconnect a connected user.
-
     access_token = login_session.get('access_token')
     if access_token is None:
         response = make_response(
@@ -324,6 +324,7 @@ def showCatalog():
     """Shows fromt page of the catalog"""
     return render_template('index.html',
                            catalog=getCatalogItemsAll(),
+                           userItems=getUserItemsNewest(3),
                            login_session=login_session)
 
 
@@ -332,6 +333,12 @@ def showCatalog():
 @app.route('/thecatalog/catalogitem/new/', methods=['GET', 'POST'])
 def newCatalogItem():
     if request.method == 'POST':
+        try:
+            # if !form['reset'] then pass
+            if request.form['reset']:
+                return redirect(url_for('showCatalog'))
+        except Exception:
+            pass
         if request.form['catalogItemTitle']:
             catalogItem = CatalogItem(
                             title=request.form['catalogItemTitle'],
@@ -372,10 +379,14 @@ def deleteCatalogItem(catalogItemId):
     try:
         catalogItem = getCatalogItem(catalogItemId)
         if request.method == 'POST':
-            if request.form['reset']:
-                return redirect(url_for(
-                            'showUserItemsInCatalog',
-                            catalogItemId=catalogItemId))
+            try:
+                # if form['edit'] then pass
+                if request.form['reset']:
+                    return redirect(url_for(
+                                'showUserItemsInCatalog',
+                                catalogItemId=catalogItemId))
+            except Exception:
+                pass
 
             session.delete(catalogItem)
             session.commit()
@@ -486,10 +497,13 @@ def editUserItem(catalogItemId, userItemId):
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
     # If cancel button pressed redirect.
-    if request.method == 'POST' and request.form['reset']:
-        return redirect(url_for('showUserItem',
-                            catalogItemId=_userItem.catalog_item_id,
-                            userItemId=_userItem.id))
+    try:
+        if request.method == 'POST' and request.form['reset']:
+            return redirect(url_for('showUserItem',
+                                catalogItemId=_userItem.catalog_item_id,
+                                userItemId=_userItem.id))
+    except Exception:
+        pass
 
     if request.method == 'POST':
         if request.form['userItemTitle']:
@@ -535,9 +549,12 @@ def deleteUserItem(catalogItemId, userItemId):
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
         user = getUserById(userItem.user_id)
-        if request.method == 'POST' and request.form['reset']:
-            return redirect(url_for('showUserItemsInCatalog',
-                                    catalogItemId=catalogItemId))
+        try:
+            if request.method == 'POST' and request.form['reset']:
+                return redirect(url_for('showUserItemsInCatalog',
+                                        catalogItemId=catalogItemId))
+        except Exception:
+            pass
         if request.method == 'POST':
             session.delete(userItem)
             session.commit()
