@@ -33,17 +33,14 @@
               <a class="nav-link" href="{{url_for('showCatalog')}}">Home<span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Link</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link disabled" href="#">Disabled</a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dropdown</a>
-              <div class="dropdown-menu" aria-labelledby="dropdown01">
-                <a class="dropdown-item" href="#">Action</a>
-                <a class="dropdown-item" href="#">Another action</a>
-                <a class="dropdown-item" href="#">Something else here</a>
+              <div class="dropdown">
+                <button class="btn btn-dark dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <i class="fa fa-bars"></i>
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                  <a class="dropdown-item" href="{{url_for('newCatalogItem')}}">Add Category</a>
+                  <a class="dropdown-item" href="{{url_for('createNewUserItem')}}">Add Post</a>
+                </div>
               </div>
             </li>
           </ul>
@@ -117,19 +114,7 @@
           <!-- Categories Widget -->
           <div class="card my-4">
             <h5 class="card-header">
-              {% if 'username' not in login_session %}
-                Categories
-              {% else %}
-                Categories
-                <a 
-                  class="btn btn-default btn-sm"
-                  type="button"
-                  href="{{url_for('newCatalogItem')}}">
-                  <i class="fa fa-edit">
-                  </i>
-                  Add Item
-                </a>
-              {% endif %}
+              Categories
             </h5>
             <div class="card-body">
               <div class="row">
@@ -141,10 +126,12 @@
                           <a href="{{url_for('showUserItemsInCatalog', catalogItemId = catalogItem.id)}}">{{catalogItem.title}}</a>
                         </div>
                         {% if 'username' in login_session %}
-                          <div class="col-lg-3">
+                          <div class="col-lg-1">
                             <a href="{{url_for('editCatalogItem', catalogItemId=catalogItem.id)}}">
                               <i class="fa fa-edit"></i>
                             </a>
+                          </div>
+                          <div class="col-lg-1">
                             <a href="{{url_for('deleteCatalogItem', catalogItemId=catalogItem.id)}}">
                               <i class="fa fa-trash-alt"></i>
                             </a>
