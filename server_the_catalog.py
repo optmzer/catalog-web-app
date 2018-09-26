@@ -332,6 +332,11 @@ def showCatalog():
 # TODO assign user id from the form
 @app.route('/thecatalog/catalogitem/new/', methods=['GET', 'POST'])
 def newCatalogItem():
+    # If user is not logged in do not accept post/get
+    # Check if user is logged in
+    if 'username' not in login_session:
+        return redirect(url_for('showLoginPage'))
+
     if request.method == 'POST':
         try:
             # if !form['reset'] then pass
@@ -357,6 +362,8 @@ def newCatalogItem():
 def editCatalogItem(catalogItemId):
     # TODO: Add redirect when successful
     catalogItem = getCatalogItem(catalogItemId)
+    # if catalogItem is yours you can edit it
+    # else redirect to public public 
     if request.method == 'POST':
         if request.form['catalogItemTitle']:
             catalogItem.title = request.form['catalogItemTitle']

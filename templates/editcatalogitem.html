@@ -49,17 +49,30 @@
     </nav>
     <!-- End NavBar -->
     <header>
-        <h1>Edit Catalog Item</h1>
+        <h2>Edit Catalog Item</h2>
     </header>
-    <main>
-        <h2>Title: {{catalogItem.title}}</h2>
-        <form action="" method="POST">
-            Name: <input type="text" name="catalogItemTitle" value="{{catalogItem.title}}" required="true">
-            <input type="submit" value="SUBMIT">
-        </form>
+    <main role="main" class="container">
+        <div class="row">
+        <div class="col-sm-6" style="margin: auto;">
+            <!-- New User Item Form -->
+            <div class="card my-2">
+            <h5 class="card-header">Current Title: {{catalogItem.title}}</h5>
+            <div class="card-body">
+                <form action="" method="POST">
+                    <div class="form-group">
+                    <label for="catalogItemTitle">New Group Title</label>
+                    <input class="form-control" type="text" name="catalogItemTitle" value="{{catalogItem.title}}">
+                    <hr>
+                    <input class="btn btn-primary" type="submit" value="Submit">
+                    <input class="btn btn-warning" type="submit" value="Cancel" name="reset">
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+        </div>
     </main>
     <footer>
-
     </footer>
 </body>
 </html>
