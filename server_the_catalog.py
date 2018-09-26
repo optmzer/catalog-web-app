@@ -6,6 +6,8 @@ import json
 import httplib2
 import requests
 
+from functools import wraps
+
 from flask import Flask
 from flask import flash
 from flask import jsonify
@@ -65,11 +67,21 @@ DBSession = sessionmaker(bind=engine)
 
 session = DBSession()
 
-#######
+####### TODO delete befor submitting the project
 def printLoginSession(message):
     print("{}".format(message))
     for key in login_session:
         print("login_session.{} : {}".format(key, login_session[key]))
+
+# Login required Wrapper
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'email' not in login_session:
+            return redirect(url_for('showLoginPage'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # Getters/Setters ################
 def createUser(login_session):
@@ -331,12 +343,8 @@ def showCatalog():
 # Create new catalogItem
 # TODO assign user id from the form
 @app.route('/thecatalog/catalogitem/new/', methods=['GET', 'POST'])
+@login_required
 def newCatalogItem():
-    # If user is not logged in do not accept post/get
-    # Check if user is logged in
-    if 'username' not in login_session:
-        return redirect(url_for('showLoginPage'))
-
     if request.method == 'POST':
         try:
             # if !form['reset'] then pass
@@ -359,8 +367,9 @@ def newCatalogItem():
 
 # Edit catalog item
 @app.route('/thecatalog/<int:catalogItemId>/edit/', methods=['GET', 'POST'])
+@login_required
 def editCatalogItem(catalogItemId):
-    # TODO: Add redirect when successful
+    # TODO: check if user is the owner 
     catalogItem = getCatalogItem(catalogItemId)
     # if catalogItem is yours you can edit it
     # else redirect to public public 
@@ -382,7 +391,9 @@ def editCatalogItem(catalogItemId):
 
 # Delete CatalogItem
 @app.route('/thecatalog/<int:catalogItemId>/delete/', methods=['GET', 'POST'])
+@login_required
 def deleteCatalogItem(catalogItemId):
+    # TODO Check if user is the owner of the catalogItem
     try:
         catalogItem = getCatalogItem(catalogItemId)
         if request.method == 'POST':
@@ -448,6 +459,7 @@ def showUserItem(catalogItemId, userItemId):
 
 # Create new UserItem
 @app.route('/thecatalog/useritem/new/', methods=['GET', 'POST'])
+@login_required
 def createNewUserItem():
     """
     Creates new UserItem
@@ -495,6 +507,7 @@ def createNewUserItem():
 # Edit a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/edit/',
            methods=['GET', 'POST'])
+@login_required
 def editUserItem(catalogItemId, userItemId):
     try:
         _catalog = getCatalogItemsAll()
@@ -551,6 +564,7 @@ def editUserItem(catalogItemId, userItemId):
 # Delete a UserItem
 @app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/delete/',
            methods=['GET', 'POST'])
+@login_required
 def deleteUserItem(catalogItemId, userItemId):
     try:
         catalogItem = getCatalogItem(catalogItemId)
