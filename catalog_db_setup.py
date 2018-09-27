@@ -23,7 +23,11 @@ class User(Base):
     name = Column(String(250), nullable=False)
     email = Column(String(250), nullable=False)
     avatar = Column(String(250))
-
+    # If I delete user I do not need to cascade all their entries
+    # catalog_item_id is a foreign key
+    catalog_item = relationship('CatalogItem', backref="user")
+    # user_item_id
+    user_item = relationship('UserItem', backref="user")
 
 class CatalogItem(Base):
     """Defines CatalogItem table"""
@@ -32,9 +36,9 @@ class CatalogItem(Base):
     id = Column(Integer, primary_key=True)
     title = Column(String(80), nullable=False)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
-    # user_id is a foreign key
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User)
+    # user_item_id
+    user_item = relationship('UserItem', cascade = "all,delete", backref="catalog_item")
 
     @property
     def serialize(self):
@@ -55,10 +59,8 @@ class UserItem(Base):
     item_picture = Column(String(250))
     # catalog_item_id is a foreign key
     catalog_item_id = Column(Integer, ForeignKey('catalog_item.id'))
-    catalog_item = relationship(CatalogItem)
     # user_id is a foreign key
     user_id = Column(Integer, ForeignKey('user.id'))
-    user = relationship(User)
 
     @property
     def serialize(self):

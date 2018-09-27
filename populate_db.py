@@ -51,7 +51,7 @@ userItem1 = UserItem(
                 esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
                 occaecat cupidatat non proident, sunt in culpa qui officia
                 deserunt mollit anim id est laborum.""",
-                item_picture="../img/pexel-photo-160107.jpeg",
+                item_picture="/static/uploads/shopping-middle-east.jpeg",
                 catalog_item_id=catalogItem01.id,
                 user_id=user01.id)
 session.add(userItem1)
@@ -72,7 +72,7 @@ userItem2 = UserItem(
                 Lorem Ipsum passages, and more recently with desktop
                 publishing software like Aldus PageMaker including versions
                 of Lorem Ipsum.""",
-                item_picture="../img/pexel-photo-1394841.jpeg",
+                item_picture="/static/uploads/coding-hard.jpeg",
                 catalog_item_id=catalogItem02.id,
                 user_id=user02.id)
 session.add(userItem2)

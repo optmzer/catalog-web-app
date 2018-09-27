@@ -478,7 +478,7 @@ def createNewUserItem():
     if request.method == 'POST':
         if 'reset' in request.form:
             return redirect(url_for('showCatalog'))
-            
+
         if request.form['userItemTitle']:
             # Get post data
             _title = request.form['userItemTitle']
