@@ -346,16 +346,18 @@ def showCatalog():
 @login_required
 def newCatalogItem():
     if request.method == 'POST':
-        try:
-            # if !form['reset'] then pass
-            if request.form['reset']:
-                return redirect(url_for('showCatalog'))
-        except Exception:
-            pass
+        if 'reset' in request.form:
+            return redirect(url_for('showCatalog'))
+
+        if 'email' in login_session:
+            try:
+                user = getUserByEmail(login_session['email'])
+            except exc.SQLAlchemyError:
+                pass
         if request.form['catalogItemTitle']:
             catalogItem = CatalogItem(
                             title=request.form['catalogItemTitle'],
-                            user_id=1)
+                            user_id=user.id)
             session.add(catalogItem)
             session.commit()
             flash("CatalogItem: " + catalogItem.title + " added.")
@@ -374,6 +376,11 @@ def editCatalogItem(catalogItemId):
     # if catalogItem is yours you can edit it
     # else redirect to public public 
     if request.method == 'POST':
+        if 'reset' in request.form:
+                return redirect(url_for(
+                            'showUserItemsInCatalog',
+                            catalogItemId=catalogItemId))
+
         if request.form['catalogItemTitle']:
             catalogItem.title = request.form['catalogItemTitle']
             message = ("New Catalog entry is "
@@ -397,14 +404,11 @@ def deleteCatalogItem(catalogItemId):
     try:
         catalogItem = getCatalogItem(catalogItemId)
         if request.method == 'POST':
-            try:
-                # if form['edit'] then pass
-                if request.form['reset']:
-                    return redirect(url_for(
-                                'showUserItemsInCatalog',
-                                catalogItemId=catalogItemId))
-            except Exception:
-                pass
+            
+            if 'reset' in request.form:
+                return redirect(url_for(
+                            'showUserItemsInCatalog',
+                            catalogItemId=catalogItemId))
 
             session.delete(catalogItem)
             session.commit()
@@ -466,12 +470,21 @@ def createNewUserItem():
     TODO update _userId for OAuth
     """
     catalog = getCatalogItemsAll()
+    if 'email' in login_session:
+        try:
+            user = getUserByEmail(login_session['email'])
+        except exc.SQLAlchemyError:
+            pass
     if request.method == 'POST':
+        if 'reset' in request.form:
+            return redirect(url_for('showCatalog'))
+            
         if request.form['userItemTitle']:
             # Get post data
             _title = request.form['userItemTitle']
             _description = request.form['description']
-            _userId = 1  # TODO update for OAuth
+            # Get id from DataBase.
+            _userId = user.id
             _catalogItemId = request.form['catalogItemId']
             # Upload image file, Record image location for DB
             try:
@@ -517,13 +530,10 @@ def editUserItem(catalogItemId, userItemId):
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
     # If cancel button pressed redirect.
-    try:
-        if request.method == 'POST' and request.form['reset']:
-            return redirect(url_for('showUserItem',
-                                catalogItemId=_userItem.catalog_item_id,
-                                userItemId=_userItem.id))
-    except Exception:
-        pass
+    if 'reset' in request.form:
+        return redirect(url_for('showUserItem',
+                            catalogItemId=_userItem.catalog_item_id,
+                            userItemId=_userItem.id))
 
     if request.method == 'POST':
         if request.form['userItemTitle']:
@@ -566,16 +576,18 @@ def editUserItem(catalogItemId, userItemId):
            methods=['GET', 'POST'])
 @login_required
 def deleteUserItem(catalogItemId, userItemId):
+
     try:
         catalogItem = getCatalogItem(catalogItemId)
         userItem = getUserItem(catalogItemId, userItemId)
         user = getUserById(userItem.user_id)
-        try:
-            if request.method == 'POST' and request.form['reset']:
-                return redirect(url_for('showUserItemsInCatalog',
-                                        catalogItemId=catalogItemId))
-        except Exception:
-            pass
+
+        # If cancel button pressed redirect.
+        if 'reset' in request.form:
+            return redirect(url_for('showUserItem',
+                                catalogItemId=userItem.catalog_item_id,
+                                userItemId=userItem.id))
+
         if request.method == 'POST':
             session.delete(userItem)
             session.commit()

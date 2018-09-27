@@ -79,10 +79,10 @@
             </div>
             {% if 'username' in login_session %}
               <div class="col-lg-1">
-                <a href=""><i class="fa fa-pen"></i></a>
+                <a href="{{url_for('editUserItem', catalogItemId=catalogItem.id , userItemId=userItem.id )}}"><i class="fa fa-pen"></i></a>
               </div>
               <div class="col-lg-1">
-                <a href=""><i class="fa fa-trash"></i></a>
+                <a href="{{url_for('deleteUserItem', catalogItemId=catalogItem.id , userItemId=userItem.id )}}"><i class="fa fa-trash"></i></a>
               </div>
             {% endif %}
           </div>

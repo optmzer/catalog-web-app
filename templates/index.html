@@ -71,7 +71,7 @@
               <div class="card-body">
                 <h2 class="card-title">{{item.title}}</h2>
                 <p class="card-text">{{item.description}}</p>
-                <a href="{{url_for('showUserItem', catalogItemId=item.catalog_item.id, userItemId=item.id)}}" class="btn btn-primary">Read More &rarr;</a>
+                <a href="{{url_for('showUserItem', catalogItemId=item.catalog_item_id, userItemId=item.id)}}" class="btn btn-primary">Read More &rarr;</a>
               </div>
               <div class="card-footer text-muted">
                 {{item.created_date}}
