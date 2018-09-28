@@ -529,6 +529,14 @@ def editUserItem(catalogItemId, userItemId):
         _user = getUserById(_userItem.user_id)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
+    ####################################################################33
+    # If user id != userItem.user_id then redirect
+    if _user.email != login_session['email']:
+        return redirect(url_for('showUserItem',
+                            catalogItemId=_userItem.catalog_item_id,
+                            userItemId=_userItem.id))
+
+
     # If cancel button pressed redirect.
     if 'reset' in request.form:
         return redirect(url_for('showUserItem',
