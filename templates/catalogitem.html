@@ -49,19 +49,50 @@
                 </div>
               </nav>
     <div>
-        <h1>Title: {{catalogItem.title}}</h1>
-        <h2>Created on: {{catalogItem.created_date}}</h2>
-        <h3>TODO:</h3>
-        <p>
-            This is going to be a list of Categories(CatalogItems)
-        </p>
-        <ul>
+
+      <!-- BODY START -->
+      <!-- Page Content -->
+    <main role="main" class="container">
+
+        <div class="row">
+  
+          <!-- Blog Entries Column -->
+          <div class="col-md-7">
+  
+            <h1 class="my-4">
+                {{catalogItem.title}}
+            </h1>
+  
             {% for item in userItems %}
-                <li>
-                    <a href="{{url_for('showUserItem', catalogItemId = catalogItem.id, userItemId = item.id )}}">{{item.title}}</a>
-                </li>
+              <!-- Blog Post -->
+              <div class="card mb-4">
+                <div class="card-body">
+                  <h2 class="card-title"></h2>
+                  <div class="row">
+                    <div class="col-lg-9">
+                      <p class="card-text d-inline">
+                          <a href="{{url_for('showUserItem', catalogItemId = catalogItem.id, userItemId = item.id )}}">{{item.title}}</a>
+                      </p>
+                    </div>
+                    <div class="col-lg-3">
+                      <a 
+                        class="btn btn-primary d-inline"
+                        href="{{url_for('showUserItem', catalogItemId=item.catalog_item_id, userItemId=item.id)}}"
+                      >
+                        More... &rarr;
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer text-muted">
+                    {{catalogItem.created_date}}
+                  <!-- TODO format date -->
+                </div>
+              </div>
             {% endfor %}
-        </ul>
+           
+          </div>
+      <!-- BODY END -->
     </div>
   <!-- Bootstrap core JavaScript -->
   <script src="/static/vendor/jquery/jquery.min.js"></script>

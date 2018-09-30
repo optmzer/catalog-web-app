@@ -258,15 +258,15 @@ def gconnect():
         user = createUser(login_session)
     login_session['user_id'] = user.id
 
-    output = ''
-    output += '<h1>Welcome, '
-    output += login_session['username']
-    output += '!</h1>'
-    output += '<img src="'
-    output += login_session['avatar']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-    flash("you are now logged in as %s" % login_session['username'])
-    print ("done!")
+    output = """
+    <h4>Welcome, {}</h4>
+    <img 
+        src="{}"
+        style="width: 50px; height: 50px;border-radius: 25px;"
+        alt="avatar"
+    >
+    """.format(login_session['username'], login_session['avatar'])
+    
     return output
 
 
@@ -371,29 +371,39 @@ def newCatalogItem():
 @app.route('/thecatalog/<int:catalogItemId>/edit/', methods=['GET', 'POST'])
 @login_required
 def editCatalogItem(catalogItemId):
-    # TODO: check if user is the owner 
-    catalogItem = getCatalogItem(catalogItemId)
-    # if catalogItem is yours you can edit it
-    # else redirect to public public 
-    if request.method == 'POST':
-        if 'reset' in request.form:
-                return redirect(url_for(
-                            'showUserItemsInCatalog',
-                            catalogItemId=catalogItemId))
+    try:
+        catalogItem = getCatalogItem(catalogItemId)
+        owner = getUserById(catalogItem.user_id)
+        # if catalogItem is yours you can edit it
+        # else redirect to public public 
 
-        if request.form['catalogItemTitle']:
-            catalogItem.title = request.form['catalogItemTitle']
-            message = ("New Catalog entry is "
-                       + request.form['catalogItemTitle'])
-            session.add(catalogItem)
-            session.commit()
-            flash(message)
-            # Redirect
+        # If user id != userItem.user_id then redirect
+        if owner.email != login_session['email']:
+            flash("You have no rights to modify entries of another user")
             return redirect(url_for('showCatalog'))
-    else:
-        return render_template('editcatalogitem.html',
-                               catalogItem=catalogItem,
-                               login_session=login_session)
+
+        if request.method == 'POST':
+
+            if 'reset' in request.form:
+                    return redirect(url_for(
+                                'showUserItemsInCatalog',
+                                catalogItemId=catalogItemId))
+
+            if request.form['catalogItemTitle']:
+                catalogItem.title = request.form['catalogItemTitle']
+                message = ("New Catalog entry is "
+                        + request.form['catalogItemTitle'])
+                session.add(catalogItem)
+                session.commit()
+                flash(message)
+                # Redirect
+                return redirect(url_for('showCatalog'))
+        else:
+            return render_template('editcatalogitem.html',
+                                catalogItem=catalogItem,
+                                login_session=login_session)
+    except exc.SQLAlchemyError:
+        return redirect(url_for('pageNotFound'))
 
 
 # Delete CatalogItem
@@ -403,6 +413,15 @@ def deleteCatalogItem(catalogItemId):
     # TODO Check if user is the owner of the catalogItem
     try:
         catalogItem = getCatalogItem(catalogItemId)
+        owner = getUserById(catalogItem.user_id)
+        # if catalogItem is yours you can edit it
+        # else redirect to public public 
+
+        # If user id != userItem.user_id then redirect
+        if owner.email != login_session['email']:
+            flash("You have no rights to modify entries of another user")
+            return redirect(url_for('showCatalog'))
+
         if request.method == 'POST':
             
             if 'reset' in request.form:
@@ -498,7 +517,7 @@ def createNewUserItem():
                                 app.config['UPLOAD_FOLDER'],
                                 filename).replace('.', '', 1)
             except Exception:
-                pass
+                _itemPic = "http://placehold.it/900x300"
 
             # Write to DB
             userItem = UserItem(title=_title,
@@ -508,7 +527,6 @@ def createNewUserItem():
                                 catalog_item_id=_catalogItemId)
             session.add(userItem)
             session.commit()
-            flash("CatalogItem: " + userItem.title + " added.")
             return redirect(url_for('showUserItemsInCatalog',
                                     catalogItemId=_catalogItemId))
     else:
@@ -532,6 +550,7 @@ def editUserItem(catalogItemId, userItemId):
     ####################################################################
     # If user id != userItem.user_id then redirect
     if _user.email != login_session['email']:
+        flash("You have no rights to modify entries of another user")
         return redirect(url_for('showUserItem',
                             catalogItemId=_userItem.catalog_item_id,
                             userItemId=_userItem.id))
@@ -565,7 +584,6 @@ def editUserItem(catalogItemId, userItemId):
 
             session.add(_userItem)
             session.commit()
-            flash("userItem: " + _userItem.title + " was edited.")
             # Go to edited user item
             return redirect(url_for('showUserItem',
                             catalogItemId=_userItem.catalog_item_id,
@@ -590,6 +608,13 @@ def deleteUserItem(catalogItemId, userItemId):
         userItem = getUserItem(catalogItemId, userItemId)
         user = getUserById(userItem.user_id)
 
+        # If user id != userItem.user_id then redirect
+        if user.email != login_session['email']:
+            flash("You have no rights to modify entries of another user")
+            return redirect(url_for('showUserItem',
+                                catalogItemId=userItem.catalog_item_id,
+                                userItemId=userItem.id))
+
         # If cancel button pressed redirect.
         if 'reset' in request.form:
             return redirect(url_for('showUserItem',
@@ -599,7 +624,6 @@ def deleteUserItem(catalogItemId, userItemId):
         if request.method == 'POST':
             session.delete(userItem)
             session.commit()
-            flash("CatalogItem " + userItem.title + " was deleted")
             # Redirect
             return redirect(url_for('showUserItemsInCatalog',
                                     catalogItemId=catalogItemId))

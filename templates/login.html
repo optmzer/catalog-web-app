@@ -20,6 +20,7 @@
 
   <body>
     <form class="form-signin">
+      <!--
       <div class="text-center mb-4">
         <img class="mb-4" src="https://getbootstrap.com/docs/4.0/assets/brand/bootstrap-solid.svg" alt="" width="72" height="72">
         <h1 class="h3 mb-3 font-weight-normal">Floating labels</h1>
@@ -45,44 +46,24 @@
         <button class="btn w-50 btn-lg btn-primary" type="submit">Sign in</button>
         <button class="btn w-50 btn-lg btn-primary" type="cancel">Cancel</button>
       </div>
+    -->
+    <div class="column">
+        <label for="signinButton">Please Sign In</label>
+        <div class="btn-group w-100 btn-group-justified signinGroup">
+          <div id="signinButton" class="btn btn-lg w-50">
+            <span class="g-signin"
+              data-scope="openid email"
+              data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
+              data-redirecturi="postmessage"
+              data-accesstype="offline"
+              data-cookiepolicy="single_host_origin"
+              data-callback="signInCallback"
+              data-approvalprompt="force">
+            </span>
+          </div>
+        </div>
+    </div>
 
-      <div class="btn-group w-100 btn-group-justified signinGroup">
-        <div id="signinButton" class="btn btn-lg w-50">
-          <span class="g-signin"
-            data-scope="openid email"
-            data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
-            data-redirecturi="postmessage"
-            data-accesstype="offline"
-            data-cookiepolicy="single_host_origin"
-            data-callback="signInCallback"
-            data-approvalprompt="force">
-          </span>
-        </div>
-        <!-- Buttons for the future use 
-        <div id="signinButton" class="btn btn-lg w-50">
-          <span class="g-signin"
-            data-scope="openid email"
-            data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
-            data-redirecturi="postmessage"
-            data-accesstype="offline"
-            data-cookiepolicy="single_host_origin"
-            data-callback="signInCallback"
-            data-approvalprompt="force">
-          </span>
-        </div>
-        <div id="signinButton" class="btn btn-lg w-50">
-          <span class="g-signin"
-            data-scope="openid email"
-            data-clientid="992130204778-7hjq7he62cpmctss07g1mu8il0e38u7r.apps.googleusercontent.com"
-            data-redirecturi="postmessage"
-            data-accesstype="offline"
-            data-cookiepolicy="single_host_origin"
-            data-callback="signInCallback"
-            data-approvalprompt="force">
-          </span>
-        </div>
-        Buttons for the future use  -->
-      </div>
       <hr>
       <div id="result"></div>
       <p class="mt-5 mb-3 text-muted text-center">© 2017-2018</p>
@@ -106,10 +87,12 @@
           success: function(result) {
             // Handle or verify the server response if necessary.
             if (result) {
-              $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+              $('#result').html(
+                'Login Successful! Redirecting...</br>' + result
+                )
               setTimeout(function() {
               window.location.href = "/thecatalog";
-              }, 4000);
+              }, 3000);
             } else if (authResult['error']) {
               console.log('There was an error: ' + authResult['error']);
             } else {

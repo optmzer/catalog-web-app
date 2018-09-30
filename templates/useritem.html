@@ -147,9 +147,17 @@
 
           <!-- Side Widget -->
           <div class="card my-4">
-            <h5 class="card-header">Side Widget</h5>
+            <h5 class="card-header">Info Widget</h5>
             <div class="card-body">
-              You can put anything you want inside of these side widgets. They are easy to use, and feature the new Bootstrap 4 card containers!
+              {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                            <li><b><i>{{message}}</i></b></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+              {% endwith %}
             </div>
           </div>
 
