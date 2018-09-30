@@ -67,11 +67,6 @@ DBSession = sessionmaker(bind=engine)
 
 session = DBSession()
 
-####### TODO delete befor submitting the project
-def printLoginSession(message):
-    print("{}".format(message))
-    for key in login_session:
-        print("login_session.{} : {}".format(key, login_session[key]))
 
 # Login required Wrapper
 def login_required(f):
@@ -163,8 +158,6 @@ def showLoginPage():
         string.ascii_uppercase + string.digits) for x in range(32))
     login_session['state'] = state
 
-    printLoginSession("======== Login session started ========")
-
     # Sent state to STATE property in html page
     return render_template('login.html', STATE=state)
 
@@ -178,14 +171,11 @@ def gconnect():
         return response
     # Obtain authorization code
     code = request.data
-    print("=== Authorization code = {}".format(code))
     try:
         # Upgrade the authorization code into a credentials object
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
-        print("==== Got credentials from G+")
-        print("credentials = {}".format(credentials))
     except FlowExchangeError as flow_error:
         print('Failed to upgrade the authorization code. error = '
               + flow_error)
@@ -281,7 +271,6 @@ def gdisconnect():
     url = ("https://accounts.google.com/o/oauth2/revoke?token="
            + access_token)
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    print("url = " + url)
     h = httplib2.Http()
     result = h.request(url, 'GET', headers=headers)
     if(result[0]['status'] == '200'):
@@ -304,7 +293,6 @@ def gdisconnect():
 
 @app.route('/disconnect', methods=['POST', 'GET'])
 def disconnect():
-    printLoginSession("===== Started Disconnection session")
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
@@ -319,7 +307,6 @@ def disconnect():
         del login_session['avatar']
         del login_session['user_id']
         del login_session['provider']
-        printLoginSession("===== Finished Disconnection session")
         flash("You have been logged out successfully.")
         return redirect(url_for('showCatalog'))
     else:
@@ -360,7 +347,6 @@ def newCatalogItem():
                             user_id=user.id)
             session.add(catalogItem)
             session.commit()
-            flash("CatalogItem: " + catalogItem.title + " added.")
             return redirect(url_for('showCatalog'))
     else:
         return render_template('newcatalogitem.html',
@@ -391,11 +377,8 @@ def editCatalogItem(catalogItemId):
 
             if request.form['catalogItemTitle']:
                 catalogItem.title = request.form['catalogItemTitle']
-                message = ("New Catalog entry is "
-                        + request.form['catalogItemTitle'])
                 session.add(catalogItem)
                 session.commit()
-                flash(message)
                 # Redirect
                 return redirect(url_for('showCatalog'))
         else:
@@ -431,7 +414,6 @@ def deleteCatalogItem(catalogItemId):
 
             session.delete(catalogItem)
             session.commit()
-            flash("CatalogItem " + catalogItem.title + " was deleted")
             # Redirect
             return redirect(url_for('showCatalog'))
         else:
