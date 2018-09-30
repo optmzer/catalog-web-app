@@ -45,8 +45,6 @@ catalog/
     client_secrest.json - must be created manually for OAuth2.0 to work.
 ```
 
-## Built With
-
 ## Prerequisites
 
 Obtain credentials from Google+ API and put them in client_secrets.json file in /catalog/client_secrets.json
@@ -84,6 +82,18 @@ YOUR_CLIENT_ID_FROM_GOOGLE_API, YOUR_PROJECT_ID, CLIENT_SECRET_GOES_HERE are all
 >NOTE:  
 >- to logout from vagrant either `ctrl+d` or `ctrl+c` in terminal window  
 >- to stop your virtual machine `$ vagrant halt` in /vagrant directory
+
+
+## JSON endpoints
+1. `/thecatalog/json`  
+returns list of json object of catalog items in the catalog.
+
+2. `/thecatalog/<int:catalogItemId>/items/json`  
+returns list of json object of all user items in a single catalogitem  
+
+3. `/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/json`  
+returns json object of this particular user item.
+
 
 ## Contributing
 

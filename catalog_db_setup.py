@@ -29,6 +29,7 @@ class User(Base):
     # user_item_id
     user_item = relationship('UserItem', backref="user")
 
+
 class CatalogItem(Base):
     """Defines CatalogItem table"""
     __tablename__ = 'catalog_item'
@@ -38,12 +39,16 @@ class CatalogItem(Base):
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     user_id = Column(Integer, ForeignKey('user.id'))
     # user_item_id
-    user_item = relationship('UserItem', cascade = "all,delete", backref="catalog_item")
+    user_item = relationship('UserItem',
+                             cascade="all,delete",
+                             backref="catalog_item")
 
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
         return {
+            'id': self.id,
+            'created_date': self.created_date,
             'title': self.title
         }
 

@@ -119,7 +119,9 @@ def getCatalogItem(catalogItemId):
 
 
 def getUserItemsNewest(howMany):
-    return session.query(UserItem).order_by(desc(UserItem.created_date)).limit(howMany)
+    return session.query(
+                UserItem).order_by(
+                    desc(UserItem.created_date)).limit(howMany)
 
 
 def getUserItems(catalogItemId):
@@ -164,6 +166,10 @@ def showLoginPage():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """
+    Connects to Google API to access user
+    Credentials. On success loggs in user into the app.
+    """
     # Validate state token
     if(request.args.get('state') != login_session['state']):
         response = make_response(json.dumps('Invalid state parameter.'), 401)
@@ -215,7 +221,7 @@ def gconnect():
         print("Token's client ID does not match app's.")
         response.headers['Content-Type'] = 'application/json'
         return response
-
+    # Check if user is already connected
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if(stored_access_token is not None and gplus_id == stored_gplus_id):
@@ -248,15 +254,15 @@ def gconnect():
         user = createUser(login_session)
     login_session['user_id'] = user.id
 
+    # Send mesage to login.html on success.
     output = """
     <h4>Welcome, {}</h4>
-    <img 
+    <img
         src="{}"
         style="width: 50px; height: 50px;border-radius: 25px;"
         alt="avatar"
     >
     """.format(login_session['username'], login_session['avatar'])
-    
     return output
 
 
@@ -293,6 +299,10 @@ def gdisconnect():
 
 @app.route('/disconnect', methods=['POST', 'GET'])
 def disconnect():
+    """
+    Google disconnect. Required for OAuth2.0
+    to logout user from the app
+    """
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
@@ -313,8 +323,10 @@ def disconnect():
         flash("Cannot find your session details or you were not logged in.")
         return redirect(url_for('showCatalog'))
 
+
 # Routs ################
 # CatalogItem ##########
+
 
 # Show all catalog entry
 @app.route('/')
@@ -361,15 +373,13 @@ def editCatalogItem(catalogItemId):
         catalogItem = getCatalogItem(catalogItemId)
         owner = getUserById(catalogItem.user_id)
         # if catalogItem is yours you can edit it
-        # else redirect to public public 
-
-        # If user id != userItem.user_id then redirect
+        # else redirect to public public
         if owner.email != login_session['email']:
             flash("You have no rights to modify entries of another user")
             return redirect(url_for('showCatalog'))
 
         if request.method == 'POST':
-
+            # reset/cancel was pressed
             if 'reset' in request.form:
                     return redirect(url_for(
                                 'showUserItemsInCatalog',
@@ -383,8 +393,8 @@ def editCatalogItem(catalogItemId):
                 return redirect(url_for('showCatalog'))
         else:
             return render_template('editcatalogitem.html',
-                                catalogItem=catalogItem,
-                                login_session=login_session)
+                                   catalogItem=catalogItem,
+                                   login_session=login_session)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
 
@@ -398,7 +408,7 @@ def deleteCatalogItem(catalogItemId):
         catalogItem = getCatalogItem(catalogItemId)
         owner = getUserById(catalogItem.user_id)
         # if catalogItem is yours you can edit it
-        # else redirect to public public 
+        # else redirect to public public
 
         # If user id != userItem.user_id then redirect
         if owner.email != login_session['email']:
@@ -406,7 +416,6 @@ def deleteCatalogItem(catalogItemId):
             return redirect(url_for('showCatalog'))
 
         if request.method == 'POST':
-            
             if 'reset' in request.form:
                 return redirect(url_for(
                             'showUserItemsInCatalog',
@@ -529,20 +538,18 @@ def editUserItem(catalogItemId, userItemId):
         _user = getUserById(_userItem.user_id)
     except exc.SQLAlchemyError:
         return redirect(url_for('pageNotFound'))
-    ####################################################################
     # If user id != userItem.user_id then redirect
     if _user.email != login_session['email']:
         flash("You have no rights to modify entries of another user")
         return redirect(url_for('showUserItem',
-                            catalogItemId=_userItem.catalog_item_id,
-                            userItemId=_userItem.id))
-
+                                catalogItemId=_userItem.catalog_item_id,
+                                userItemId=_userItem.id))
 
     # If cancel button pressed redirect.
     if 'reset' in request.form:
         return redirect(url_for('showUserItem',
-                            catalogItemId=_userItem.catalog_item_id,
-                            userItemId=_userItem.id))
+                                catalogItemId=_userItem.catalog_item_id,
+                                userItemId=_userItem.id))
 
     if request.method == 'POST':
         if request.form['userItemTitle']:
@@ -594,14 +601,14 @@ def deleteUserItem(catalogItemId, userItemId):
         if user.email != login_session['email']:
             flash("You have no rights to modify entries of another user")
             return redirect(url_for('showUserItem',
-                                catalogItemId=userItem.catalog_item_id,
-                                userItemId=userItem.id))
+                            catalogItemId=userItem.catalog_item_id,
+                            userItemId=userItem.id))
 
         # If cancel button pressed redirect.
         if 'reset' in request.form:
             return redirect(url_for('showUserItem',
-                                catalogItemId=userItem.catalog_item_id,
-                                userItemId=userItem.id))
+                            catalogItemId=userItem.catalog_item_id,
+                            userItemId=userItem.id))
 
         if request.method == 'POST':
             session.delete(userItem)
