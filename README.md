@@ -85,6 +85,7 @@ YOUR_CLIENT_ID_FROM_GOOGLE_API, YOUR_PROJECT_ID, CLIENT_SECRET_GOES_HERE are all
 
 
 ## JSON endpoints
+
 1. `/thecatalog/json`  
 returns list of json object of catalog items in the catalog.
 
