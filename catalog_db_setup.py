@@ -60,7 +60,7 @@ class UserItem(Base):
     id = Column(Integer, primary_key=True)
     created_date = Column(DateTime, default=datetime.datetime.utcnow)
     title = Column(String(80), nullable=False)
-    description = Column(String(250))
+    description = Column(String(1000))
     item_picture = Column(String(250))
     # catalog_item_id is a foreign key
     catalog_item_id = Column(Integer, ForeignKey('catalog_item.id'))
@@ -80,7 +80,7 @@ class UserItem(Base):
 
 
 # Insert at the end of the file ##########
-engine = create_engine('sqlite:///thecatalog.db')
+engine = create_engine('postgresql://thecatalog:catalogPass@localhost/thecatalog')
 
 # Adds classes as new tables in our DB
 Base.metadata.create_all(engine)

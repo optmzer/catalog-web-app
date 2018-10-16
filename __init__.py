@@ -29,7 +29,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import exc
 from sqlalchemy import desc
 
-
 # Upload file name check
 from werkzeug.utils import secure_filename
 
@@ -58,7 +57,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
 
 # Create Connection to DB ################
 # init connection with DB
-engine = create_engine('sqlite:///thecatalog.db?check_same_thread=False')
+engine = create_engine('postgresql://thecatalog:catalogPass@localhost/thecatalog')
 
 # Connection between class def and corresp table in DB
 Base.metadata.bind = engine
@@ -661,9 +660,7 @@ if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself
     # each time it sees chaneg in code.
     # 64bit random key
-    app.secret_key = """
-    e630bca6fe1177f7d82f9f79755d7dd74c2a946d1a562b18cb63f938cb4fd5d8b1eb323
-    f05a0e51cd67e88d4d1514273fd2ef6644bcdbf49261443880a0d2143"""
+    app.secret_key = """SuperSecretString"""
     # Remove app.debug and change app.run(host='0.0.0.0', port=8080)
     # to app.run()
     app.debug = True
