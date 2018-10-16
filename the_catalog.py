@@ -636,21 +636,21 @@ def pageNotFound():
 
 
 # JSON APIs to view Restaurant Information
-@app.route('/thecatalog/<int:catalogItemId>/items/json')
+@app.route('/thecatalog/<int:catalogItemId>/items/JSON')
 def catalogItemJSON(catalogItemId):
     """Get all UserItems in a specified CatalogItem"""
     userItems = getUserItems(catalogItemId)
     return jsonify(userItems=[i.serialize for i in userItems])
 
 
-@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/json')
+@app.route('/thecatalog/<int:catalogItemId>/useritem/<int:userItemId>/JSON')
 def userItemJSON(catalogItemId, userItemId):
     """Get specified UserItem based on catalogId and userItemId"""
     userItem = getUserItem(catalogItemId, userItemId)
     return jsonify(userItem=userItem.serialize)
 
 
-@app.route('/thecatalog/json')
+@app.route('/thecatalog/JSON')
 def catalogAllJSON():
     """Get all CatalogItems"""
     catalog = getCatalogItemsAll()
@@ -660,7 +660,12 @@ def catalogAllJSON():
 if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself
     # each time it sees chaneg in code.
-    app.secret_key = 'appSecretKey'
+    # 64bit random key
+    app.secret_key = """
+    e630bca6fe1177f7d82f9f79755d7dd74c2a946d1a562b18cb63f938cb4fd5d8b1eb323
+    f05a0e51cd67e88d4d1514273fd2ef6644bcdbf49261443880a0d2143"""
+    # Remove app.debug and change app.run(host='0.0.0.0', port=8080)
+    # to app.run()
     app.debug = True
     # param specifies on port 5000
     app.run(host='0.0.0.0', port=5000)
