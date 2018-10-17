@@ -32,10 +32,10 @@ from sqlalchemy import desc
 # Upload file name check
 from werkzeug.utils import secure_filename
 
-from catalog_db_setup import Base
-from catalog_db_setup import CatalogItem
-from catalog_db_setup import User
-from catalog_db_setup import UserItem
+from .catalog_db_setup import Base
+from .catalog_db_setup import CatalogItem
+from .catalog_db_setup import User
+from .catalog_db_setup import UserItem
 
 # Create Flask app ################
 # Upload constants
@@ -45,7 +45,7 @@ MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10Mb max file size
 
 # OAuth2.0 Google constants
 CLIEN_ID = json.loads(
-    open('client_secrets.json', 'r').read()
+    open('/var/www/thecatalog/thecatalog/client_secrets.json', 'r').read()
 )['web']['client_id']
 APPLICATION_NAME = "The Catalog"
 
@@ -660,9 +660,10 @@ if __name__ == '__main__':
     # app.debug = True - Means the server will reload itself
     # each time it sees chaneg in code.
     # 64bit random key
-    app.secret_key = """SuperSecretString"""
+    #app.secret_key = """SuperSecretString"""
     # Remove app.debug and change app.run(host='0.0.0.0', port=8080)
     # to app.run()
-    app.debug = True
+    #app.debug = True
     # param specifies on port 5000
-    app.run(host='0.0.0.0', port=5000)
+    #app.run(host='0.0.0.0', port=5000)
+    app.run()
