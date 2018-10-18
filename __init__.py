@@ -44,8 +44,9 @@ ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10Mb max file size
 
 # OAuth2.0 Google constants
+CLIENT_SECRETS_PATH = "/var/www/thecatalog/thecatalog/client_secrets.json"
 CLIEN_ID = json.loads(
-    open('/var/www/thecatalog/thecatalog/client_secrets.json', 'r').read()
+    open(CLIENT_SECRETS_PATH, 'r').read()
 )['web']['client_id']
 APPLICATION_NAME = "The Catalog"
 
@@ -178,7 +179,7 @@ def gconnect():
     code = request.data
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets(CLIENT_SECRETS_PATH, scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError as flow_error:
@@ -195,7 +196,8 @@ def gconnect():
           'https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
           % access_token)
     h = httplib2.Http()
-    result = json.loads(h.request(url, 'GET')[1])
+    result = json.loads((h.request(url, 'GET')[1]).decode())
+    
     # If there was an error in the access token info, abort.
     if(result.get('error') is not None):
         response = make_response(json.dumps(result.get('error')), 500)
