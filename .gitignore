@@ -12,6 +12,8 @@ fb_client_secrets.json
 *.jpeg
 *.png
 
+# Virtual Environment
+venv/
 
 # Misc
 *.pyc
