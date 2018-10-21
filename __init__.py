@@ -39,7 +39,8 @@ from .catalog_db_setup import UserItem
 
 # Create Flask app ################
 # Upload constants
-UPLOAD_FOLDER = './static/uploads'
+UPLOAD_FOLDER = '/var/www/thecatalog/thecatalog/static/uploads'
+RELATIVE_PATH = '/static/uploads'
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10Mb max file size
 
@@ -286,7 +287,7 @@ def gdisconnect():
         return response
     else:
         if(result[1] is not None):
-            data = json.loads(result[1])
+            data = json.loads((result[1]).decode())
             err = data['error']
             err_desc = data['error_description']
         response = make_response(
@@ -501,13 +502,16 @@ def createNewUserItem():
             try:
                 file = request.files['itemPicture']
                 if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
+                    filename = secure_filename(
+                                    "{}{}".format(_title, file.filename)).replace(" ", "-")
                     file.save(os.path.join(
                                 app.config['UPLOAD_FOLDER'],
                                 filename))
                 _itemPic = os.path.join(
-                                app.config['UPLOAD_FOLDER'],
-                                filename).replace('.', '', 1)
+                                #app.config['UPLOAD_FOLDER'],
+                                RELATIVE_PATH,
+                                filename)
+				#.replace(' ', '-')
             except Exception:
                 _itemPic = "http://placehold.it/900x300"
 
@@ -563,14 +567,21 @@ def editUserItem(catalogItemId, userItemId):
             try:
                 file = request.files['itemPicture']
                 if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
+                    filename = secure_filename(
+                                 "{}{}".format(_userItem.title, file.filename)).replace(" ", "-")
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'],
                                            filename))
+                                           #.replace" ", "-"())
                 _userItem.item_picture = os.path.join(
-                                            app.config['UPLOAD_FOLDER'],
-                                            filename).replace('.', '', 1)
-            except Exception:
-                pass
+                                            #app.config['UPLOAD_FOLDER'],
+                                            RELATIVE_PATH,
+                                            filename)
+					    #.replace('.', '', 1)
+            except OSError as e:
+                flash(json.dumps("OSError = {}".format(e)))
+            except Exception as ex:
+                flash(json.dumps("General = {}".format(ex)))
+                #pass
 
             session.add(_userItem)
             session.commit()
